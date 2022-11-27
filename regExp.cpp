@@ -31,7 +31,7 @@ class CHAR : public REGEX{
         }
 
         bool nullable(char d){
-            return c == d;
+            return false;
         }
 };
 
