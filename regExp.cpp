@@ -5,7 +5,7 @@ using std::cout;
 class REGEX{
     public:
         virtual ~REGEX() = default;
-        virtual bool nullable(char a = '\0') = 0;
+        virtual bool nullable() = 0;
 };
 
 class ZERO : public REGEX{
@@ -17,7 +17,7 @@ class ZERO : public REGEX{
 
 class ONE : public REGEX{
     public:
-        bool nullable(char in = 'a'){
+        bool nullable(){
             return true;
         }
 };
@@ -30,7 +30,7 @@ class CHAR : public REGEX{
             c = in;
         }
 
-        bool nullable(char d){
+        bool nullable(){
             return false;
         }
 };
@@ -42,7 +42,7 @@ class ALT : public REGEX{
 
         ALT(REGEX & re1, REGEX & re2):r1(re1),r2(re2){}
 
-        bool nullable(char in = 'a'){
+        bool nullable(){
             return r1.nullable() || r2.nullable();
         }
 };
@@ -54,7 +54,7 @@ class SEQ : public REGEX{
 
         SEQ(REGEX & re1, REGEX & re2):r1(re1),r2(re2){}
 
-        bool nullable(char in = 'a'){
+        bool nullable(){
             return r1.nullable() && r2.nullable();
         }
 };
@@ -65,7 +65,7 @@ class STAR : public REGEX{
 
         STAR(REGEX & re1):r1(re1){}
 
-        bool nullable(char in = 'a'){
+        bool nullable(){
             return true;
         }
 };
