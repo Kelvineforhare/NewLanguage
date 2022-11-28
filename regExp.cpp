@@ -1,15 +1,35 @@
 #include <iostream>
 #include <set>
 #include <string>
+#include <vector>
 //CLASS REGEX
 using std::cout;
 using std::set;
 using std::string;
+using std::vector;
+
+
+//fix function protyping
+// CHAR chr(char);
+// ALT alt(const REGEX &,const REGEX &);
+// SEQ seq(const REGEX & ,const REGEX &);
+// STAR star(const REGEX & r1);
+// PLUS plus(const REGEX & r1);
+// NTIMES ntimes(const REGEX &, int);
+// RANGE range(const set<char>);
+
+
+// ID id(string str,const REGEX & r1){
+//     ID i(r1,str);
+//     return i;
+// }
+
 
 class REGEX{
     public:
         virtual ~REGEX() = default;
         virtual bool nullable() const = 0;
+        virtual REGEX & der(char c) const = 0;
 };
 
 class ZERO : public REGEX{
@@ -17,12 +37,22 @@ class ZERO : public REGEX{
         bool nullable() const{
             return false;
         }
+
+        REGEX & der(char c) const{
+            ZERO z;
+            return z;
+        }
 };
 
 class ONE : public REGEX{
     public:
         bool nullable() const{
             return true;
+        }
+
+        REGEX & der(char c) const{
+            ONE o;
+            return o;
         }
 };
 
@@ -37,6 +67,15 @@ class CHAR : public REGEX{
         bool nullable() const{
             return false;
         }
+
+        REGEX & der(char d) const{
+            if(c == d){
+                ONE o;
+                return o;
+            }
+            ZERO z;
+            return z;
+        }
 };
 
 class ALT : public REGEX{
@@ -48,6 +87,11 @@ class ALT : public REGEX{
 
         bool nullable() const{
             return r1.nullable() || r2.nullable();
+        }
+
+        REGEX & der(char c) const{
+            ALT ret = alt(r1.der(c),r2.der(c));
+            return ret;
         }
 };
 
@@ -61,6 +105,14 @@ class SEQ : public REGEX{
         bool nullable() const {
             return r1.nullable() && r2.nullable();
         }
+
+        REGEX & der(char c) const{
+            if(r1.nullable()){
+                alt(seq(r1.der(c),r2),r2.der(c));
+            }
+            SEQ ret = seq(r1.der(c),r2);
+            return ret;
+        }
 };
 
 class STAR : public REGEX{
@@ -71,6 +123,11 @@ class STAR : public REGEX{
 
         bool nullable() const{
             return true;
+        }
+
+        REGEX & der(char c) const{
+            STAR ret = seq(r1.der(c),star(r1));
+            return ret;
         }
 };
 
@@ -83,18 +140,32 @@ class PLUS : public REGEX{
         bool nullable() const{
             return r1.nullable();
         }
+
+        REGEX & der(char c) const{
+            STAR ret = seq(r1.der(c),star(r1));
+            return ret;
+        }
 };
 
 class RANGE : public REGEX{
     public:
-        set<char> c;
+        set<char> s;
 
         RANGE(set<char> in){
-            c = in;
+            s = in;
         }
 
         bool nullable() const{
             return false;
+        }
+
+         REGEX & der(char c) const{
+            if(s.find(c) != s.end()){
+                ONE o;
+                return o;
+            }
+            ZERO z;
+            return z;
         }
 };
 
@@ -122,13 +193,6 @@ class ID : public REGEX{
         }
 };
 
-
-
-
-
-
-
-
 CHAR chr(char a){
     CHAR c(a);
     return c;
@@ -154,44 +218,40 @@ PLUS plus(const REGEX & r1){
     return p;
 }
 
-NTIMES ntimes(const REGEX & r1, int i){
-    NTIMES n(r1,i);
-    return n;
-}
+// NTIMES ntimes(const REGEX & r1, int i){
+//     NTIMES n(r1,i);
+//     return n;
+// }
 
 RANGE range(const set<char> s){
     RANGE r(s);
     return r;
 }
 
-ID id(string str,const REGEX & r1){
-    ID i(r1,str);
-    return i;
-}
+// ID id(string str,const REGEX & r1){
+//     ID i(r1,str);
+//     return i;
+// }
+
+
+
+
+// REGEX & ders(vector<char> str,REGEX & r){
+//     for (char c : str) {
+//         vector<char> rest = vector<char>(str.begin()+1,str.end());
+//         ders(rest, der(c,r));
+//     }
+    
+// }
 
 
 int main(){
-    ONE x = ONE();
-    CHAR y = CHAR('d');
-    SEQ xy = SEQ(x,y);
-    STAR s = STAR(xy);
-    set<char> a;
-    a.insert('G');
-    a.insert('F');
-    a.insert('G');
-    RANGE r = RANGE(a);
-    NTIMES n = NTIMES(r,0);
-    PLUS p = PLUS(s);
+    ONE o;
+    ALT a(o,o);
 
-    ALT evil2 = alt(star(star(chr('a'))),chr('b'));
+    //ALT evil2 = alt(star(star(chr('a'))),chr('b'));   
 
-    plus(evil2);    
-
-    cout << evil2.nullable() << "\n";
+    cout << a.nullable() << "\n";
     return 0;
 }
 
-
-    // ZERO, 
-    // ONE,
-    // CHAR(c: Char), ALT(r1: Rexp, r2: Rexp), SEQ(r1: Rexp, r2: Rexp), STAR(r: Rexp), NTIMES(r: Rexp, n: Int),RANGE(r: Set[Char]),PLUS(r: Rexp), RECD(x: String, r: Rexp)};
