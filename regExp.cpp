@@ -9,20 +9,29 @@ using std::string;
 using std::vector;
 
 
+class REGEX;
+class ZERO;
+class ONE;
+class CHAR;
+class RANGE;
+class ALT;
+class SEQ;
+class STAR;
+class PLUS;
+class NTIMES;
+class ID;
+
 //fix function protyping
-// CHAR chr(char);
-// ALT alt(const REGEX &,const REGEX &);
-// SEQ seq(const REGEX & ,const REGEX &);
-// STAR star(const REGEX & r1);
-// PLUS plus(const REGEX & r1);
-// NTIMES ntimes(const REGEX &, int);
-// RANGE range(const set<char>);
-
-
-// ID id(string str,const REGEX & r1){
-//     ID i(r1,str);
-//     return i;
-// }
+ZERO & zero();
+ONE & one();
+ALT & alt(const REGEX &,const REGEX &);
+SEQ & seq(const REGEX & ,const REGEX &);
+STAR & star(const REGEX & r1);
+PLUS & plus(const REGEX & r1);
+NTIMES & ntimes(const REGEX &, int);
+RANGE & range(const set<char>);
+CHAR & cha(char);
+ID & id(string,const REGEX &);
 
 
 class REGEX{
@@ -30,6 +39,7 @@ class REGEX{
         virtual ~REGEX() = default;
         virtual bool nullable() const = 0;
         virtual REGEX & der(char c) const = 0;
+        virtual string str() const = 0;
 };
 
 class ZERO : public REGEX{
@@ -39,8 +49,12 @@ class ZERO : public REGEX{
         }
 
         REGEX & der(char c) const{
-            ZERO z;
-            return z;
+            ZERO * z = new ZERO();
+            return *(z);
+        }
+        
+        string str() const {
+            return "ZERO";
         }
 };
 
@@ -51,8 +65,12 @@ class ONE : public REGEX{
         }
 
         REGEX & der(char c) const{
-            ONE o;
-            return o;
+            ZERO * z = new ZERO();
+            return *(z);
+        }
+
+        string str() const{
+            return "ONE";
         }
 };
 
@@ -70,11 +88,14 @@ class CHAR : public REGEX{
 
         REGEX & der(char d) const{
             if(c == d){
-                ONE o;
-                return o;
+                return one();
             }
-            ZERO z;
-            return z;
+            return zero();
+        }
+
+        string str() const{
+            string s(1, c);
+            return s;
         }
 };
 
@@ -90,8 +111,12 @@ class ALT : public REGEX{
         }
 
         REGEX & der(char c) const{
-            ALT ret = alt(r1.der(c),r2.der(c));
-            return ret;
+            //ALT ret = alt(r1.der(c),r2.der(c));
+            return alt(r1.der(c),r2.der(c));
+        }
+
+        string str() const{
+            return r1.str() + " || " + r2.str();
         }
 };
 
@@ -108,10 +133,14 @@ class SEQ : public REGEX{
 
         REGEX & der(char c) const{
             if(r1.nullable()){
-                alt(seq(r1.der(c),r2),r2.der(c));
+                return alt(seq(r1.der(c),r2),r2.der(c));
             }
-            SEQ ret = seq(r1.der(c),r2);
-            return ret;
+            //SEQ ret = seq(r1.der(c),r2);
+            return seq(r1.der(c),r2);
+        }
+
+         string str() const{
+            return r1.str() + " && " + r2.str();
         }
 };
 
@@ -126,8 +155,12 @@ class STAR : public REGEX{
         }
 
         REGEX & der(char c) const{
-            STAR ret = seq(r1.der(c),star(r1));
-            return ret;
+            //STAR ret = seq(r1.der(c),star(r1));
+            return seq(r1.der(c),star(r1));
+        }
+
+         string str() const{
+            return r1.str() + "*";
         }
 };
 
@@ -142,8 +175,12 @@ class PLUS : public REGEX{
         }
 
         REGEX & der(char c) const{
-            STAR ret = seq(r1.der(c),star(r1));
-            return ret;
+            //STAR ret = seq(r1.der(c),star(r1));
+            return seq(r1.der(c),star(r1));
+        }
+
+        string str() const {
+            return r1.str() + "+";
         }
 };
 
@@ -161,12 +198,21 @@ class RANGE : public REGEX{
 
          REGEX & der(char c) const{
             if(s.find(c) != s.end()){
-                ONE o;
-                return o;
+                //ONE o;
+                return one();
             }
-            ZERO z;
-            return z;
+            //ZERO z;
+            return zero();
         }
+
+        string str() const {
+            string r = "[ ";
+            for (char const& c : s){
+                r + c + ", ";
+            }
+            return r;
+        }
+        
 };
 
 class NTIMES : public REGEX{
@@ -179,6 +225,20 @@ class NTIMES : public REGEX{
         bool nullable() const{
             return (i == 0)?true:r1.nullable();
         }
+
+        REGEX & der(char c) const{
+            if(i == 0){
+                //ZERO z;
+                return zero();
+            }
+            //SEQ s = seq(r1.der(c),ntimes(r1,i-1));
+            return seq(r1.der(c),ntimes(r1,i-1));
+        }   
+
+        string str() const {
+            
+            return r1.str() + "{" + std::to_string(i) + "}";
+        }     
 };
 
 class ID : public REGEX{
@@ -191,67 +251,95 @@ class ID : public REGEX{
         bool nullable() const{
             return r1.nullable();
         }
+
+        REGEX & der(char c) const{
+            return r1.der(c);
+        } 
+
+        string str() const {
+            return s + ": (" + r1.str() + ")";
+        }     
 };
 
-CHAR chr(char a){
-    CHAR c(a);
-    return c;
+ONE & one(){
+    ONE * o = new ONE();
+    return *(o);
 }
 
-ALT alt(const REGEX & r1,const REGEX & r2){
-    ALT a(r1,r2);
-    return a;
+ZERO & zero(){
+    ZERO * o = new ZERO();
+    return *(o);
 }
 
-SEQ seq(const REGEX & r1,const REGEX & r2){
-    SEQ a(r1,r2);
-    return a;
+CHAR & cha(char c){
+    CHAR * ret = new CHAR(c);
+    return *(ret);
 }
 
-STAR star(const REGEX & r1){
-    STAR a(r1);
-    return a;
+ALT & alt(const REGEX & r1,const REGEX & r2){
+    ALT * a = new ALT(r1,r2);
+    return *(a);
 }
 
-PLUS plus(const REGEX & r1){
-    PLUS p(r1);
-    return p;
+SEQ & seq(const REGEX & r1,const REGEX & r2){
+    SEQ * a = new SEQ(r1,r2);
+    return *(a);
 }
 
-// NTIMES ntimes(const REGEX & r1, int i){
-//     NTIMES n(r1,i);
-//     return n;
-// }
+STAR & star(const REGEX & r1){
+    STAR * a = new STAR(r1);
+    return * (a);
+}
 
-RANGE range(const set<char> s){
-    RANGE r(s);
+PLUS & plus(const REGEX & r1){
+    PLUS * p = new PLUS(r1);
+    return *(p);
+}
+
+NTIMES & ntimes(const REGEX & r1, int i){
+    NTIMES * n = new NTIMES(r1,i);
+    return *(n);
+}
+
+RANGE & range(const set<char> s){
+    RANGE * r = new RANGE(s);
+    return *(r);
+}
+
+ID & id(string str,const REGEX & r1){
+    ID * i = new ID(r1,str);
+    return *(i);
+}
+
+REGEX & der(char c,REGEX & r){
+    return r.der(c);
+}
+
+
+REGEX & ders(vector<char> str,REGEX & r){
+    for (char c : str) {
+        vector<char> rest = vector<char>(str.begin()+1,str.end());
+        // REGEX & ret =  der(c,r);
+        // cout << c << " " << ret.str() << "\n ";
+        return ders(rest,der(c,r));
+    }
     return r;
 }
 
-// ID id(string str,const REGEX & r1){
-//     ID i(r1,str);
-//     return i;
-// }
-
-
-
-
-// REGEX & ders(vector<char> str,REGEX & r){
-//     for (char c : str) {
-//         vector<char> rest = vector<char>(str.begin()+1,str.end());
-//         ders(rest, der(c,r));
-//     }
-    
-// }
+bool matcher(REGEX & r,string s)
+{
+    vector<char> v(s.begin(), s.end());
+    return ders(v,r).nullable();
+}
 
 
 int main(){
     ONE o;
-    ALT a(o,o);
+    
 
     //ALT evil2 = alt(star(star(chr('a'))),chr('b'));   
-
-    cout << a.nullable() << "\n";
+    vector<char> v{'a'};
+    cout << matcher(star(cha('a')),"aaaaaaa")<< "\n";
     return 0;
 }
 
