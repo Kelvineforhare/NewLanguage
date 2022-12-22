@@ -2,12 +2,13 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <sys/resource.h>
 using std::cout;
 using std::set;
 using std::string;
 using std::vector;
 
-//CHANGE SIMP SO THAT IT DOESNT CREATE NEW REGEX IN MEMEORY 
+//use gbd
 
 
 class REGEX;
@@ -24,8 +25,8 @@ class ID;
 
 ZERO & zero();
 ONE & one();
-ALT & alt( REGEX &, REGEX &);
-SEQ & seq( REGEX & , REGEX &);
+ALT & alt(const REGEX &,const REGEX &);
+SEQ & seq(const REGEX & ,const  REGEX &);
 STAR & star(const REGEX & r1);
 PLUS & plus(const REGEX & r1);
 NTIMES & ntimes(const REGEX &, int);
@@ -35,35 +36,35 @@ ID & id(string,const REGEX &);
 
 
 class REGEX{
+    
     friend bool operator==( REGEX& a,  REGEX& b){
     if (a.str() == b.str()){
         return true;
     }
     return false;
     }
+
     friend bool operator==(const REGEX& a,const  REGEX& b){
     if (a.str() == b.str()){
         return true;
     }
     return false;
     }
-    
-
 
     public:
+        const REGEX * reg;
         virtual ~REGEX() = default;
         virtual bool nullable() const = 0;
         virtual REGEX & der(char c) const = 0;
         virtual string str() const = 0;
-        virtual REGEX & simp() = 0;
+        virtual REGEX & simp() const = 0;
         virtual bool isZero() const {return false;}
         virtual bool isOne() const {return false;}
-        //virtual void del() = 0; make fuction to delete pointers
+        //virtual void del() = 0; possibly make fuction to delete pointers
 };
 
 class ZERO : public REGEX{
     public:
-        ZERO * z;
 
         bool nullable() const{
             return false;
@@ -77,8 +78,8 @@ class ZERO : public REGEX{
             return "ZERO";
         }
 
-        REGEX & simp(){
-            return *z;
+        REGEX & simp() const{
+            return zero();
         }
 
         bool isZero() const {return true;}
@@ -86,7 +87,6 @@ class ZERO : public REGEX{
 
 class ONE : public REGEX{
     public:
-        ONE * o;
 
         bool nullable() const{
             return true;
@@ -100,8 +100,8 @@ class ONE : public REGEX{
             return "ONE";
         }
 
-        REGEX & simp() {
-            return *o;
+        REGEX & simp() const{
+            return one();
         }
 
         bool isOne()const {return true;}
@@ -109,8 +109,8 @@ class ONE : public REGEX{
 
 class CHAR : public REGEX{
     public:
-        CHAR * chr;
         char c;
+        CHAR * chr;
 
         CHAR(char in){
             c = in;
@@ -132,17 +132,17 @@ class CHAR : public REGEX{
             return s;
         }
 
-        REGEX & simp() {
+        REGEX & simp() const{
             return *chr;
         }
 };
 
 class ALT : public REGEX{
     public:
-        REGEX & r1;
-        REGEX & r2;
+        const REGEX & r1;
+        const REGEX & r2;
 
-        ALT( REGEX & re1, REGEX & re2):r1(re1),r2(re2){}
+        ALT(const REGEX & re1,const REGEX & re2):r1(re1),r2(re2){}
 
         bool nullable() const{
             return r1.nullable() || r2.nullable();
@@ -157,15 +157,13 @@ class ALT : public REGEX{
             return "(" + r1.str() + " || " + r2.str() + ")";
         }
 
-        REGEX & simp() {
+         REGEX & simp() const{
             REGEX & n1 = r1.simp();
             REGEX & n2 = r2.simp();
 
-
-            cout << "p1: " << n1.str() << "\n";
-            cout << "p2: " << n2.str() << "\n";
+            // cout << "p1: " << n1.str() << "\n";
+            // cout << "p2: " << n2.str() << "\n";
             
-
             if(n1.isZero()){
                 return n2;
             }
@@ -173,7 +171,6 @@ class ALT : public REGEX{
                 return n1;
             }
             if(n1 == n2){
-                cout << "test";
                 return n1;
             }
             return alt(n1,n2);
@@ -182,11 +179,11 @@ class ALT : public REGEX{
 
 class SEQ : public REGEX{
     public:
-        REGEX & r1;
-        REGEX & r2;
+        const REGEX & r1;
+        const REGEX & r2;
 
 
-        SEQ(REGEX & re1,REGEX & re2):r1(re1),r2(re2){}
+        SEQ(const REGEX & re1, const REGEX & re2):r1(re1),r2(re2){}
 
         bool nullable() const {
             return r1.nullable() && r2.nullable();
@@ -204,13 +201,12 @@ class SEQ : public REGEX{
             return "(" +  r1.str() + " && " + r2.str() + ")";
         }
 
-        REGEX & simp() {
+         REGEX & simp() const{
             REGEX & n1 =  r1.simp();
             REGEX & n2 = r2.simp();
 
-
+            //cout << n1.str() << " " << n2.str() << "\n";
             if(r1.isZero() || r2.isZero()){
-                //cout << "1\n";
                 return zero();
             }
             if(r1.isOne()){
@@ -219,9 +215,6 @@ class SEQ : public REGEX{
             if(r2.isOne()){
                 return n1;
             }
-            // se->r1 = n1;
-            // se->r2 = n2;
-            // cout <<  se->r1.str() << std::endl;
             return seq(n1,n2); 
         }
 };
@@ -246,7 +239,7 @@ class STAR : public REGEX{
             return r1.str() + "*";
         }
 
-        REGEX & simp() {
+         REGEX & simp() const{
             return *s;
         }
 };
@@ -271,7 +264,7 @@ class PLUS : public REGEX{
             return r1.str() + "+";
         }
 
-        REGEX & simp() {
+         REGEX & simp() const{
             return *pl;
         }
 };
@@ -289,7 +282,7 @@ class RANGE : public REGEX{
             return false;
         }
 
-         REGEX & der(char c) const{
+        REGEX & der(char c) const{
             if(s.find(c) != s.end()){
                 //ONE o;
                 return one();
@@ -306,7 +299,7 @@ class RANGE : public REGEX{
             return r;
         }
         
-        REGEX & simp() {
+         REGEX & simp() const{
             return *ra;
         }
 };
@@ -337,7 +330,7 @@ class NTIMES : public REGEX{
             return r1.str() + "{" + std::to_string(i) + "}";
         }  
 
-        REGEX & simp() {
+         REGEX & simp() const{
             return *nt;
         }   
 };
@@ -362,21 +355,19 @@ class ID : public REGEX{
             return s + ": (" + r1.str() + ")";
         }     
 
-        REGEX & simp() {
+         REGEX & simp() const {
             return *i;
         }
 };
 
 ONE & one(){
-    ONE * one = new ONE();
-    one->o = one;
-    return *one;
+    static ONE one;
+    return one;
 }
 
 ZERO & zero(){
-    ZERO * o = new ZERO();
-    o->z = o;
-    return *o;
+    static ZERO zero;
+    return zero;
 }
 
 CHAR & cha(char c){
@@ -385,12 +376,12 @@ CHAR & cha(char c){
     return *(ret);
 }
 
-ALT & alt( REGEX & r1, REGEX & r2){
+ALT & alt(const REGEX & r1,const REGEX & r2){
     ALT * a = new ALT(r1,r2);
     return *a;
 }
 
-SEQ & seq( REGEX & r1, REGEX & r2){
+SEQ & seq(const REGEX & r1,const REGEX & r2){
     SEQ * a = new SEQ(r1,r2);
     return *a;
 }
@@ -425,40 +416,47 @@ ID & id(string str,const REGEX & r1){
     return *id;
 }
 
-REGEX & der(char c,REGEX & r){
+REGEX & der(char c,const REGEX & r){
     return r.der(c);
 }
 
 
-REGEX & ders(vector<char> str,REGEX & r){
-    for (char c : str) {
-        vector<char> rest = vector<char>(str.begin()+1,str.end());
-        // REGEX & ret =  der(c,r);
-        // cout << c << " " << ret.str() << "\n ";
-        REGEX & s = der(c,r).simp();
-        //cout << s.str() << "\n";
-        return ders(rest,s);
+const REGEX & ders(const vector<char> & str, const REGEX & r,int i){
+    if(i >= str.size()){
+        return r;
     }
-    return r;
+    REGEX * s = &der(str[i],r).simp();
+    ++i;
+    for(;i < str.size();++i){
+        //cout << "before: " << s->str() << " " << str[i] <<  "\n ";
+        s = &der(str[i],*s).simp();
+        //cout << "simp: " << s->str() <<  "\n ";
+    }
+    return *s;
 }
 
-bool matcher(REGEX & r,string s)
+bool matcher(const REGEX & r,const string & s)
 {
     vector<char> v(s.begin(), s.end());
-    return ders(v,r).nullable();
+    return ders(v,r,0).nullable();
 }
 
+void test(const vector<char> & str,int i){
+    cout << str.size() << " " << i << "\n";
+    if(i >= str.size()){
+        return;
+    }
+    //const REGEX & ret =  der(str[i],r).simp();
+    return test(str,++i);
+}
 
+//check memory
 int main(){
-    REGEX & ret = seq(seq(one(),star(cha('a'))),star(star(cha('a')))).simp();
-    cout << ret.str() << "\n";
-    delete &ret;
-    //ALT evil2 = alt(star(star(cha('a'))),cha('b'));   
-    //cout << z.isZero();
-    // for(int i = 0; i < 6000000;i+=500000) {
-    //    cout << matcher(evil2, string(i, 'a')) << "\n";
-    // }
-    //cout << matcher(evil2, string(2, 'a')) << "\n";
+    ALT evil2 = alt(star(star(cha('a'))),cha('b'));  
+
+    for(int i = 0; i < 6000000;i+=500000) {
+       cout << matcher(evil2, string(i, 'a')) << "\n";
+    }
     return 0;
 }
 

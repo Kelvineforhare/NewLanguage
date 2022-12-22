@@ -1,6 +1,7 @@
 *.vscode
 *.metals
 regExp
+regExp.*
 # Created by https://www.toptal.com/developers/gitignore/api/macos,visualstudiocode,c++,windows
 # Edit at https://www.toptal.com/developers/gitignore?templates=macos,visualstudiocode,c++,windows
 
