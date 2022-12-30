@@ -138,7 +138,7 @@ class CHAR : public REGEX{
         }
 
         unique_ptr<REGEX> simp() {
-            return move(chr);
+            return cha(c);
         }
 };
 
@@ -197,7 +197,7 @@ class SEQ : public REGEX{
         bool nullable() const {
             return r1->nullable() && r2->nullable();
         }
-
+        //moves ownership here
         unique_ptr<REGEX> der(char c){
            
             if(r1->nullable()){
@@ -217,7 +217,7 @@ class SEQ : public REGEX{
             unique_ptr<REGEX> n2 = r2->simp();
             
             cout << "n1: " << n1->str() << "\n";
-            //cout << "r2: " << r2->str() << "\n";
+            cout << "r2: " << r2->str() << "\n";
 
             if(n1->isZero() || n2->isZero()){
                 
@@ -459,7 +459,7 @@ bool matcher(unique_ptr<REGEX> r,const string & s)
 //check memory
 int main(){
     auto test = seq(cha('c'),cha('b'));
-    cout << matcher(move(test), string(1, 'c')) << "\n";
+    cout << matcher(move(test), "cb") << "\n";
 
     // ALT evil2 = alt(star(star(cha('a'))),cha('b'));  
 
