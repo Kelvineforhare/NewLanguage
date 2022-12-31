@@ -9,6 +9,7 @@ using std::set;
 using std::string;
 using std::vector;
 using std::unique_ptr;
+using std::shared_ptr;
 using std::move;
 
 //use gbd
@@ -26,13 +27,15 @@ class PLUS;
 class NTIMES;
 class ID;
 
-unique_ptr<ZERO> zero();
-unique_ptr<ONE> one();
-unique_ptr<CHAR> cha(char);
-unique_ptr<ALT> alt(unique_ptr<REGEX>,unique_ptr<REGEX>);
-unique_ptr<SEQ> seq(unique_ptr<REGEX>,unique_ptr<REGEX>);
+shared_ptr<ZERO> zero();
+shared_ptr<ONE> one();
+shared_ptr<CHAR> cha(char);
+shared_ptr<ALT> alt(shared_ptr<REGEX>,shared_ptr<REGEX>);
 
-STAR & star(const REGEX & r1);
+
+unique_ptr<SEQ> seq(unique_ptr<REGEX>,unique_ptr<REGEX>);
+unique_ptr<STAR> star(unique_ptr<REGEX> r1);
+
 PLUS & plus(const REGEX & r1);
 NTIMES & ntimes(const REGEX &, int);
 RANGE & range(const set<char>);
@@ -59,9 +62,9 @@ class REGEX{
         const REGEX * reg;
         virtual ~REGEX() = default;
         virtual bool nullable() const = 0;
-        virtual unique_ptr<REGEX> der(char c) = 0;
+        virtual shared_ptr<REGEX> der(char c) = 0;
         virtual string str() const = 0;
-        virtual unique_ptr<REGEX> simp() = 0;
+        virtual shared_ptr<REGEX> simp() = 0;
         virtual bool isZero() const {return false;}
         virtual bool isOne() const {return false;}
         //virtual void del() = 0; possibly make fuction to delete pointers
@@ -74,7 +77,7 @@ class ZERO : public REGEX{
             return false;
         }
 
-        unique_ptr<REGEX> der(char c) {
+        shared_ptr<REGEX> der(char c) {
             return zero();
         }
         
@@ -82,7 +85,7 @@ class ZERO : public REGEX{
             return "ZERO";
         }
 
-        unique_ptr<REGEX> simp() {
+        shared_ptr<REGEX> simp() {
             return zero();
         }
 
@@ -96,7 +99,7 @@ class ONE : public REGEX{
             return true;
         }
 
-       unique_ptr<REGEX> der(char c) {
+       shared_ptr<REGEX> der(char c) {
             return zero();
         }
 
@@ -104,7 +107,7 @@ class ONE : public REGEX{
             return "ONE";
         }
 
-        unique_ptr<REGEX> simp(){
+        shared_ptr<REGEX> simp(){
             return one();
         }
 
@@ -125,7 +128,7 @@ class CHAR : public REGEX{
             return false;
         }
 
-        unique_ptr<REGEX> der(char d){
+        shared_ptr<REGEX> der(char d){
             if(c == d){
                 return one();
             }
@@ -137,25 +140,25 @@ class CHAR : public REGEX{
             return s;
         }
 
-        unique_ptr<REGEX> simp() {
+        shared_ptr<REGEX> simp() {
             return cha(c);
         }
 };
 
 class ALT : public REGEX{
     private: 
-        unique_ptr<REGEX> r1;
-        unique_ptr<REGEX> r2;
+        shared_ptr<REGEX> r1;
+        shared_ptr<REGEX> r2;
 
     public:
     
-        ALT(unique_ptr<REGEX> re1,unique_ptr<REGEX> re2):r1(move(re1)),r2(move(re2)){}
+        ALT(shared_ptr<REGEX> re1,shared_ptr<REGEX> re2):r1(re1),r2(re2){}
 
         bool nullable() const{
             return r1->nullable() || r2->nullable();
         }
 
-        unique_ptr<REGEX> der(char c) {
+        shared_ptr<REGEX> der(char c) {
             cout << r1->str() << "\n";
             cout << r2->str() << "\n";
             return alt(r1->der(c),r2->der(c));
@@ -165,9 +168,9 @@ class ALT : public REGEX{
             return "(" + r1->str() + " || " + r2->str() + ")";
         }
 
-        unique_ptr<REGEX> simp() {
-            unique_ptr<REGEX> n1 = r1->simp();
-            unique_ptr<REGEX> n2 = r2->simp();
+        shared_ptr<REGEX> simp() {
+            shared_ptr<REGEX> n1 = r1->simp();
+            shared_ptr<REGEX> n2 = r2->simp();
 
             // cout << "p1: " << n1->str() << "\n";
             // cout << "p2: " << n2->str() << "\n";
@@ -181,81 +184,81 @@ class ALT : public REGEX{
             if(n1.get()->str() == n2.get()->str()){
                 return n1;
             }
-            return alt(move(n1),move(n2));
+            return alt(n1,n2);
         }
         
 };
 
-class SEQ : public REGEX{
-    private: 
-        unique_ptr<REGEX> r1;
-        unique_ptr<REGEX> r2;
-    public:
+// class SEQ : public REGEX{
+//     private: 
+//         unique_ptr<REGEX> r1;
+//         unique_ptr<REGEX> r2;
+//     public:
 
-        SEQ(unique_ptr<REGEX> re1,unique_ptr<REGEX> re2):r1(move(re1)),r2(move(re2)){}
+//         SEQ(unique_ptr<REGEX> re1,unique_ptr<REGEX> re2):r1(move(re1)),r2(move(re2)){}
 
-        bool nullable() const {
-            return r1->nullable() && r2->nullable();
-        }
-        //moves ownership here
-        unique_ptr<REGEX> der(char c){
+//         bool nullable() const {
+//             return r1->nullable() && r2->nullable();
+//         }
+//         //moves ownership here
+//         unique_ptr<REGEX> der(char c){
            
-            if(r1->nullable()){
-                return alt(seq(r1->der(c),move(r2)),r2->der(c));
-            }
-            cout << r1->str() << "\n";
-            cout << r2->str() << "\n";
-            return seq(r1->der(c),move(r2));
-        }
+//             if(r1->nullable()){
+//                 return alt(seq(r1->der(c),move(r2)),r2->der(c));
+//             }
+//             cout << r1->str() << "\n";
+//             cout << r2->str() << "\n";
+//             return seq(r1->der(c),move(r2));
+//         }
 
-        string str() const{
-            return "(" +  r1->str() + " && " + r2->str() + ")";
-        }
+//         string str() const{
+//             return "(" +  r1->str() + " && " + r2->str() + ")";
+//         }
 
-        unique_ptr<REGEX> simp() {
-            unique_ptr<REGEX> n1 = r1->simp();
-            unique_ptr<REGEX> n2 = r2->simp();
+//         unique_ptr<REGEX> simp() {
+//             unique_ptr<REGEX> n1 = r1->simp();
+//             unique_ptr<REGEX> n2 = r2->simp();
             
-            cout << "n1: " << n1->str() << "\n";
-            cout << "r2: " << r2->str() << "\n";
+//             cout << "n1: " << n1->str() << "\n";
+//             cout << "r2: " << r2->str() << "\n";
 
-            if(n1->isZero() || n2->isZero()){
+//             if(n1->isZero() || n2->isZero()){
                 
-                return zero();
-            }
-            if(n1->isOne()){
-                cout << "test\n";
-                return n2;
-            }
-            if(n2->isOne()){
-                return n1;
-            }
-            return seq(move(n1),move(n2)); 
-        }
-};
+//                 return zero();
+//             }
+//             if(n1->isOne()){
+//                 return n2;
+//             }
+//             if(n2->isOne()){
+//                 return n1;
+//             }
+//             return seq(move(n1),move(n2)); 
+//         }
+// };
 
 // class STAR : public REGEX{
-//     public:
-//         const REGEX & r1;
-//         STAR * s;
+//     private:
+//          unique_ptr<REGEX> r1;
 
-//         STAR(const REGEX & re1):r1(re1){}
+//     public:
+       
+
+//         STAR(unique_ptr<REGEX> re1):r1(move(re1)){}
 
 //         bool nullable() const{
 //             return true;
 //         }
 
-//         REGEX & der(char c) const{
-//             //STAR ret = seq(r1.der(c),star(r1));
-//             return seq(r1.der(c),star(r1));
+//         unique_ptr<REGEX> der(char c) {
+//             return seq(r1->der(c),star(move(r1)));
 //         }
 
-//          string str() const{
-//             return r1.str() + "*";
+//         string str() const{
+//             return r1->str() + "*";
 //         }
 
-//         const REGEX & simp() const{
-//             return *s;
+//         unique_ptr<REGEX> simp(){
+//             return star(move(r1));
 //         }
 // };
 
@@ -375,33 +378,33 @@ class SEQ : public REGEX{
 //         }
 // };
 
-unique_ptr<ONE> one(){
+shared_ptr<ONE> one(){
     unique_ptr<ONE> one (new ONE());
     return one;
 }
 
-unique_ptr<ZERO> zero(){
-    unique_ptr<ZERO> zero(new ZERO());
+shared_ptr<ZERO> zero(){
+    shared_ptr<ZERO> zero(new ZERO());
     return zero;
 }
 
-unique_ptr<CHAR> cha(char c){
-    unique_ptr<CHAR> p(new CHAR(c));
+shared_ptr<CHAR> cha(char c){
+    shared_ptr<CHAR> p(new CHAR(c));
     return p;
 }
 
-unique_ptr<ALT> alt(unique_ptr<REGEX> r1,unique_ptr<REGEX> r2){
-    unique_ptr<ALT> a (new ALT(move(r1),move(r2)));
+shared_ptr<ALT> alt(shared_ptr<REGEX> r1,shared_ptr<REGEX> r2){
+    shared_ptr<ALT> a (new ALT(move(r1),move(r2)));
     return a;
 }
 
-unique_ptr<SEQ> seq(unique_ptr<REGEX> r1,unique_ptr<REGEX> r2){
-    unique_ptr<SEQ> seq(new SEQ(move(r1),move(r2)));
-    return seq;
-}
+// shared_ptr<SEQ> seq(unique_ptr<REGEX> r1,unique_ptr<REGEX> r2){
+//     unique_ptr<SEQ> seq(new SEQ(move(r1),move(r2)));
+//     return seq;
+// }
 
-// unique_ptr<STAR> star(const REGEX & r1){
-//     unique_ptr<STAR> s(new STAR(r1));
+// unique_ptr<STAR> star(unique_ptr<REGEX> r1){
+//     unique_ptr<STAR> s(new STAR(move(r1)));
 //     return s;
 // }
 
@@ -429,37 +432,35 @@ unique_ptr<SEQ> seq(unique_ptr<REGEX> r1,unique_ptr<REGEX> r2){
 //     return *id;
 // }
 
-unique_ptr<REGEX> der(char c,unique_ptr<REGEX> r){
+shared_ptr<REGEX> der(char c,shared_ptr<REGEX> r){
     return r->der(c);
 }
 
 
-unique_ptr<REGEX> ders(const vector<char> & str, unique_ptr<REGEX> r,int i){
+shared_ptr<REGEX> ders(const vector<char> & str, shared_ptr<REGEX> r,int i){
     if(i >= str.size()){
         return r;
     }
-    cout << "before: " << r->str() << " " << str[i] <<  "\n ";
-    unique_ptr<REGEX> s = der(str[i],move(r))->simp();
-    cout << "after: " << s->str() << " " << str[i] <<  "\n ";
+    shared_ptr<REGEX> s = der(str[i],move(r))->simp();
     ++i;
     for(;i < str.size();++i){
         //cout << "before: " << s->str() << " " << str[i] <<  "\n ";
-        s = der(str[i],move(s))->simp();
+        s = der(str[i],s)->simp();
         //cout << "simp: " << s->str() <<  "\n ";
     }
     return s;
 }
 
-bool matcher(unique_ptr<REGEX> r,const string & s)
+bool matcher(shared_ptr<REGEX> r,const string & s)
 {
     vector<char> v(s.begin(), s.end());
-    return ders(v,move(r),0)->nullable();
+    return ders(v,r,0)->nullable();
 }
 
 //check memory
 int main(){
-    auto test = seq(cha('c'),cha('b'));
-    cout << matcher(move(test), "cb") << "\n";
+    auto test = cha('c');
+    cout << matcher(test, "c") << "\n";
 
     // ALT evil2 = alt(star(star(cha('a'))),cha('b'));  
 
