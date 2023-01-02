@@ -35,9 +35,8 @@ shared_ptr<SEQ> seq(shared_ptr<REGEX>,shared_ptr<REGEX>);
 shared_ptr<STAR> star(shared_ptr<REGEX>);
 shared_ptr<PLUS> plus(shared_ptr<REGEX>);
 shared_ptr<NTIMES> ntimes(shared_ptr<REGEX>, int);
-
-RANGE & range(const set<char>);
-ID & id(string,const REGEX &);
+shared_ptr<RANGE> range(const set<char>);
+shared_ptr<ID> id(string,shared_ptr<REGEX>);
 
 
 class REGEX{
@@ -308,67 +307,68 @@ class NTIMES : public REGEX{
         }   
 };
 
-// class RANGE : public REGEX{
-//     public:
-//         set<char> s;
-//         RANGE * ra;
+class RANGE : public REGEX{
+    private:
+        set<char> s;
 
-//         RANGE(set<char> in){
-//             s = in;
-//         }
+    public:
 
-//         bool nullable() const{
-//             return false;
-//         }
+        RANGE(set<char> in){
+            s = in;
+        }
 
-//         REGEX & der(char c) const{
-//             if(s.find(c) != s.end()){
-//                 //ONE o;
-//                 return one();
-//             }
-//             //ZERO z;
-//             return zero();
-//         }
+        bool nullable() const{
+            return false;
+        }
 
-//         string str() const {
-//             string r = "[ ";
-//             for (char const& c : s){
-//                 r + c + ", ";
-//             }
-//             return r;
-//         }
+        shared_ptr<REGEX> der(char c){
+            if(s.find(c) != s.end()){
+                return one();
+            }
+            return zero();
+        }
+
+        string str() const {
+            string r = "[ ";
+            for (char const& c : s){
+                r = r + c + ", ";
+            }
+            r = r + "]";
+            return r;
+        }
         
-//          REGEX & simp() const{
-//             return *ra;
-//         }
-// };
+        shared_ptr<REGEX> simp() {
+            return range(s);
+        }
+};
 
 
 
-// class ID : public REGEX{
-//     public:
-//         const REGEX & r1;
-//         string s;
-//         ID * i;
+class ID : public REGEX{
+    private: 
+        shared_ptr<REGEX> r1;
+        string s;
 
-//         ID(const REGEX & re1,string str):r1(re1),s(str){}
+    public:
+    
+        ID(shared_ptr<REGEX> re1,string str):r1(re1),s(str){}
 
-//         bool nullable() const{
-//             return r1.nullable();
-//         }
+        bool nullable() const{
+            return r1->nullable();
+        }
 
-//         REGEX & der(char c) const{
-//             return r1.der(c);
-//         } 
+        shared_ptr<REGEX> der(char c) {
+            return r1->der(c);
+        } 
 
-//         string str() const {
-//             return s + ": (" + r1.str() + ")";
-//         }     
+        string str() const {
+            return s + ": (" + r1->str() + ")";
+        }     
 
-//          REGEX & simp() const {
-//             return *i;
-//         }
-// };
+        shared_ptr<REGEX> simp()  {
+            return id(s,r1);
+        }
+};
 
 shared_ptr<ONE> one(){
     shared_ptr<ONE> one (new ONE());
@@ -410,17 +410,15 @@ shared_ptr<NTIMES> ntimes(shared_ptr<REGEX> r1, int i){
     return n;
 }
 
-// RANGE & range(set<char> s){
-//     RANGE * r = new RANGE(s);
-//     r->ra = r;
-//     return *r;
-// }
+shared_ptr<RANGE> range(set<char> s){
+    shared_ptr<RANGE> r(new RANGE(s));
+    return r;
+}
 
-// ID & id(string str,const REGEX & r1){
-//     ID * id = new ID(r1,str);
-//     id->i = id;
-//     return *id;
-// }
+shared_ptr<ID> id(string str,shared_ptr<REGEX> r1){
+    shared_ptr<ID> id(new ID(r1,str));
+    return id;
+}
 
 shared_ptr<REGEX> der(char c,shared_ptr<REGEX> r){
     return r->der(c);
@@ -434,9 +432,9 @@ shared_ptr<REGEX> ders(const vector<char> & str, shared_ptr<REGEX> r,int i){
     shared_ptr<REGEX> s = der(str[i],r)->simp();
     ++i;
     for(;i < str.size();++i){
-        cout << "before: " << s->str() << " " << str[i] <<  "\n ";
+        //cout << "before: " << s->str() << " " << str[i] <<  "\n ";
         s = der(str[i],s)->simp();
-        cout << "simp: " << s->str() <<  "\n ";
+        //cout << "simp: " << s->str() <<  "\n ";
     }
     return s;
 }
@@ -449,8 +447,10 @@ bool matcher(shared_ptr<REGEX> r,const string & s)
 
 //check memory
 int main(){
-    shared_ptr<REGEX> test = ntimes(cha('a'),3);
-    cout << matcher(test, "aaa") << "\n";
+    set<char> c = {'a','b','c','e','k','l','v','i','n'};
+    shared_ptr<REGEX> test = id("name",star(range(c)));
+    cout << test->str() << "\n";
+    cout << matcher(test, "kelvin") << "\n";
 
     // auto evil2 = alt(star(star(cha('a'))),cha('b'));  
 
