@@ -31,21 +31,19 @@ shared_ptr<ZERO> zero();
 shared_ptr<ONE> one();
 shared_ptr<CHAR> cha(char);
 shared_ptr<ALT> alt(shared_ptr<REGEX>,shared_ptr<REGEX>);
+shared_ptr<SEQ> seq(shared_ptr<REGEX>,shared_ptr<REGEX>);
+shared_ptr<STAR> star(shared_ptr<REGEX>);
+shared_ptr<PLUS> plus(shared_ptr<REGEX>);
+shared_ptr<NTIMES> ntimes(shared_ptr<REGEX>, int);
 
-
-unique_ptr<SEQ> seq(unique_ptr<REGEX>,unique_ptr<REGEX>);
-unique_ptr<STAR> star(unique_ptr<REGEX> r1);
-
-PLUS & plus(const REGEX & r1);
-NTIMES & ntimes(const REGEX &, int);
 RANGE & range(const set<char>);
 ID & id(string,const REGEX &);
 
 
 class REGEX{
     
-    friend bool operator==( REGEX& a,  REGEX& b){
-        if (a.str() == b.str()){
+    friend bool operator==(shared_ptr<REGEX> a,shared_ptr<REGEX> b){
+        if (a->str() == b->str()){
             return true;
         }
         return false;
@@ -93,8 +91,8 @@ class ZERO : public REGEX{
 };
 
 class ONE : public REGEX{
-    public:
 
+    public:
         bool nullable() const{
             return true;
         }
@@ -117,7 +115,6 @@ class ONE : public REGEX{
 class CHAR : public REGEX{
     private: 
         char c;
-        unique_ptr<CHAR> chr;
 
     public:
         CHAR(char in){
@@ -159,8 +156,6 @@ class ALT : public REGEX{
         }
 
         shared_ptr<REGEX> der(char c) {
-            cout << r1->str() << "\n";
-            cout << r2->str() << "\n";
             return alt(r1->der(c),r2->der(c));
         }
 
@@ -181,7 +176,7 @@ class ALT : public REGEX{
             if(n2->isZero()){
                 return n1;
             }
-            if(n1.get()->str() == n2.get()->str()){
+            if(n1 == n2){
                 return n1;
             }
             return alt(n1,n2);
@@ -189,103 +184,129 @@ class ALT : public REGEX{
         
 };
 
-// class SEQ : public REGEX{
-//     private: 
-//         unique_ptr<REGEX> r1;
-//         unique_ptr<REGEX> r2;
-//     public:
+class SEQ : public REGEX{
+    private: 
+        shared_ptr<REGEX> r1;
+        shared_ptr<REGEX> r2;
+    public:
 
-//         SEQ(unique_ptr<REGEX> re1,unique_ptr<REGEX> re2):r1(move(re1)),r2(move(re2)){}
+        SEQ(shared_ptr<REGEX> re1,shared_ptr<REGEX> re2):r1((re1)),r2((re2)){}
 
-//         bool nullable() const {
-//             return r1->nullable() && r2->nullable();
-//         }
-//         //moves ownership here
-//         unique_ptr<REGEX> der(char c){
+        bool nullable() const {
+            return r1->nullable() && r2->nullable();
+        }
+
+        shared_ptr<REGEX> der(char c){
            
-//             if(r1->nullable()){
-//                 return alt(seq(r1->der(c),move(r2)),r2->der(c));
-//             }
-//             cout << r1->str() << "\n";
-//             cout << r2->str() << "\n";
-//             return seq(r1->der(c),move(r2));
-//         }
+            if(r1->nullable()){
+                return alt(seq(r1->der(c),r2),r2->der(c));
+            }
+            // cout << r1->str() << "\n";
+            // cout << r2->str() << "\n";
+            return seq(r1->der(c),(r2));
+        }
 
-//         string str() const{
-//             return "(" +  r1->str() + " && " + r2->str() + ")";
-//         }
+        string str() const{
+            return "(" +  r1->str() + " && " + r2->str() + ")";
+        }
 
-//         unique_ptr<REGEX> simp() {
-//             unique_ptr<REGEX> n1 = r1->simp();
-//             unique_ptr<REGEX> n2 = r2->simp();
+        shared_ptr<REGEX> simp() {
+            shared_ptr<REGEX> n1 = r1->simp();
+            shared_ptr<REGEX> n2 = r2->simp();
             
-//             cout << "n1: " << n1->str() << "\n";
-//             cout << "r2: " << r2->str() << "\n";
+            // cout << "n1: " << n1->str() << "\n";
+            // cout << "r2: " << r2->str() << "\n";
 
-//             if(n1->isZero() || n2->isZero()){
+            if(n1->isZero() || n2->isZero()){
                 
-//                 return zero();
-//             }
-//             if(n1->isOne()){
-//                 return n2;
-//             }
-//             if(n2->isOne()){
-//                 return n1;
-//             }
-//             return seq(move(n1),move(n2)); 
-//         }
-// };
+                return zero();
+            }
+            if(n1->isOne()){
+                return n2;
+            }
+            if(n2->isOne()){
+                return n1;
+            }
+            return seq((n1),(n2)); 
+        }
+};
 
-// class STAR : public REGEX{
-//     private:
-//          unique_ptr<REGEX> r1;
+class STAR : public REGEX{
+    private:
+         shared_ptr<REGEX> r1;
 
-//     public:
-       
+    public:
+        STAR(shared_ptr<REGEX> re1):r1((re1)){}
 
-//         STAR(unique_ptr<REGEX> re1):r1(move(re1)){}
+        bool nullable() const{
+            return true;
+        }
 
-//         bool nullable() const{
-//             return true;
-//         }
+        shared_ptr<REGEX> der(char c) {
+            return seq(r1->der(c),star((r1)));
+        }
 
-//         unique_ptr<REGEX> der(char c) {
-//             return seq(r1->der(c),star(move(r1)));
-//         }
+        string str() const{
+            return r1->str() + "*";
+        }
 
-//         string str() const{
-//             return r1->str() + "*";
-//         }
+        shared_ptr<REGEX> simp(){
+            return star((r1));
+        }
+};
 
-//         unique_ptr<REGEX> simp(){
-//             return star(move(r1));
-//         }
-// };
+class PLUS : public REGEX{
+    private:
+         shared_ptr<REGEX> r1;
+    public:
 
-// class PLUS : public REGEX{
-//     public:
-//         const REGEX & r1;
-//         PLUS * pl;
+        PLUS(shared_ptr<REGEX> re1):r1(re1){}
 
-//         PLUS(const REGEX & re1):r1(re1){}
+        bool nullable() const{
+            return r1->nullable();
+        }
 
-//         bool nullable() const{
-//             return r1.nullable();
-//         }
+        shared_ptr<REGEX> der(char c){
+            return seq(r1->der(c),star(r1));
+        }
 
-//         REGEX & der(char c) const{
-//             //STAR ret = seq(r1.der(c),star(r1));
-//             return seq(r1.der(c),star(r1));
-//         }
+        string str() const {
+            return r1->str() + "+";
+        }
 
-//         string str() const {
-//             return r1.str() + "+";
-//         }
+        shared_ptr<REGEX> simp(){
+            return plus(r1);
+        }
+};
 
-//          REGEX & simp() const{
-//             return *pl;
-//         }
-// };
+class NTIMES : public REGEX{
+    private:
+         shared_ptr<REGEX> r1;
+         int i;
+
+    public:
+
+        NTIMES(shared_ptr<REGEX> re1,int num):r1(re1),i(num){}
+
+        bool nullable() const{
+            return (i == 0)?true:r1->nullable();
+        }
+
+        shared_ptr<REGEX> der(char c){
+            if(i == 0){
+                return zero();
+            }
+            return seq(r1->der(c),ntimes(r1,i-1));
+        }   
+
+        string str() const {
+            return r1->str() + "{" + std::to_string(i) + "}";
+        }  
+
+        shared_ptr<REGEX> simp(){
+            return ntimes(r1,i);
+        }   
+};
 
 // class RANGE : public REGEX{
 //     public:
@@ -322,36 +343,7 @@ class ALT : public REGEX{
 //         }
 // };
 
-// class NTIMES : public REGEX{
-//     public:
-//         const REGEX & r1;
-//         int i;
-//         NTIMES * nt;
 
-//         NTIMES(const REGEX & re1,int num):r1(re1),i(num){}
-
-//         bool nullable() const{
-//             return (i == 0)?true:r1.nullable();
-//         }
-
-//         REGEX & der(char c) const{
-//             if(i == 0){
-//                 //ZERO z;
-//                 return zero();
-//             }
-//             //SEQ s = seq(r1.der(c),ntimes(r1,i-1));
-//             return seq(r1.der(c),ntimes(r1,i-1));
-//         }   
-
-//         string str() const {
-            
-//             return r1.str() + "{" + std::to_string(i) + "}";
-//         }  
-
-//          REGEX & simp() const{
-//             return *nt;
-//         }   
-// };
 
 // class ID : public REGEX{
 //     public:
@@ -379,7 +371,7 @@ class ALT : public REGEX{
 // };
 
 shared_ptr<ONE> one(){
-    unique_ptr<ONE> one (new ONE());
+    shared_ptr<ONE> one (new ONE());
     return one;
 }
 
@@ -394,31 +386,29 @@ shared_ptr<CHAR> cha(char c){
 }
 
 shared_ptr<ALT> alt(shared_ptr<REGEX> r1,shared_ptr<REGEX> r2){
-    shared_ptr<ALT> a (new ALT(move(r1),move(r2)));
+    shared_ptr<ALT> a (new ALT((r1),(r2)));
     return a;
 }
 
-// shared_ptr<SEQ> seq(unique_ptr<REGEX> r1,unique_ptr<REGEX> r2){
-//     unique_ptr<SEQ> seq(new SEQ(move(r1),move(r2)));
-//     return seq;
-// }
+shared_ptr<SEQ> seq(shared_ptr<REGEX> r1,shared_ptr<REGEX> r2){
+    unique_ptr<SEQ> seq(new SEQ((r1),(r2)));
+    return seq;
+}
 
-// unique_ptr<STAR> star(unique_ptr<REGEX> r1){
-//     unique_ptr<STAR> s(new STAR(move(r1)));
-//     return s;
-// }
+shared_ptr<STAR> star(shared_ptr<REGEX> r1){
+    shared_ptr<STAR> s(new STAR((r1)));
+    return s;
+}
 
-// PLUS & plus(const REGEX & r1){
-//     PLUS * p = new PLUS(r1);
-//     p->pl = p;
-//     return *p;
-// }
+shared_ptr<PLUS> plus(shared_ptr<REGEX> r1){
+    shared_ptr<PLUS> p(new PLUS(r1));
+    return p;
+}
 
-// NTIMES & ntimes(const REGEX & r1, int i){
-//     NTIMES * n = new NTIMES(r1,i);
-//     n->nt = n;
-//     return *n;
-// }
+shared_ptr<NTIMES> ntimes(shared_ptr<REGEX> r1, int i){
+    shared_ptr<NTIMES> n(new NTIMES(r1,i));
+    return n;
+}
 
 // RANGE & range(set<char> s){
 //     RANGE * r = new RANGE(s);
@@ -441,12 +431,12 @@ shared_ptr<REGEX> ders(const vector<char> & str, shared_ptr<REGEX> r,int i){
     if(i >= str.size()){
         return r;
     }
-    shared_ptr<REGEX> s = der(str[i],move(r))->simp();
+    shared_ptr<REGEX> s = der(str[i],r)->simp();
     ++i;
     for(;i < str.size();++i){
-        //cout << "before: " << s->str() << " " << str[i] <<  "\n ";
+        cout << "before: " << s->str() << " " << str[i] <<  "\n ";
         s = der(str[i],s)->simp();
-        //cout << "simp: " << s->str() <<  "\n ";
+        cout << "simp: " << s->str() <<  "\n ";
     }
     return s;
 }
@@ -459,10 +449,10 @@ bool matcher(shared_ptr<REGEX> r,const string & s)
 
 //check memory
 int main(){
-    auto test = cha('c');
-    cout << matcher(test, "c") << "\n";
+    shared_ptr<REGEX> test = ntimes(cha('a'),3);
+    cout << matcher(test, "aaa") << "\n";
 
-    // ALT evil2 = alt(star(star(cha('a'))),cha('b'));  
+    // auto evil2 = alt(star(star(cha('a'))),cha('b'));  
 
     // for(int i = 0; i < 6000000;i+=500000) {
     //    cout << matcher(evil2, string(i, 'a')) << "\n";
