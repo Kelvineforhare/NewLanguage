@@ -200,8 +200,6 @@ class SEQ : public REGEX{
             if(r1->nullable()){
                 return alt(seq(r1->der(c),r2),r2->der(c));
             }
-            // cout << r1->str() << "\n";
-            // cout << r2->str() << "\n";
             return seq(r1->der(c),(r2));
         }
 
@@ -212,9 +210,6 @@ class SEQ : public REGEX{
         shared_ptr<REGEX> simp() {
             shared_ptr<REGEX> n1 = r1->simp();
             shared_ptr<REGEX> n2 = r2->simp();
-            
-            // cout << "n1: " << n1->str() << "\n";
-            // cout << "r2: " << r2->str() << "\n";
 
             if(n1->isZero() || n2->isZero()){
                 
@@ -432,9 +427,7 @@ shared_ptr<REGEX> ders(const vector<char> & str, shared_ptr<REGEX> r,int i){
     shared_ptr<REGEX> s = der(str[i],r)->simp();
     ++i;
     for(;i < str.size();++i){
-        //cout << "before: " << s->str() << " " << str[i] <<  "\n ";
         s = der(str[i],s)->simp();
-        //cout << "simp: " << s->str() <<  "\n ";
     }
     return s;
 }
@@ -445,18 +438,47 @@ bool matcher(shared_ptr<REGEX> r,const string & s)
     return ders(v,r,0)->nullable();
 }
 
-//check memory
+shared_ptr<REGEX> charlist2rexp(const string & s){
+  if(s.size() == 0){
+    return one();
+  }
+  if(s.size() == 1){
+    return cha(s[0]);
+  }
+  shared_ptr<REGEX> ret = seq(cha(s[0]),cha(s[1]));
+  for(int i = 2; i < s.size();++i){
+        ret = seq(ret,cha(s[i]));
+  }
+  return ret;
+}
+
+
 int main(){
-    set<char> c = {'a','b','c','e','k','l','v','i','n'};
-    shared_ptr<REGEX> test = id("name",star(range(c)));
-    cout << test->str() << "\n";
-    cout << matcher(test, "kelvin") << "\n";
+    string digitstr = "0123456789";
+    string digitstr1 = "123456789";
+    string characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    string sym = "._><=;,\':";
 
-    // auto evil2 = alt(star(star(cha('a'))),cha('b'));  
+    shared_ptr<REGEX> digit = range(set<char>(begin(digitstr), end(digitstr)));
+    shared_ptr<REGEX> digit1 = range(set<char>(begin(digitstr1), end(digitstr1)));
+    shared_ptr<REGEX> num = alt(digit,seq(digit1,star(digit)));
 
-    // for(int i = 0; i < 6000000;i+=500000) {
-    //    cout << matcher(evil2, string(i, 'a')) << "\n";
-    // }
+    shared_ptr<REGEX> whitespaces = alt(alt(alt(cha('\n'),cha('\t')),cha('\r')),cha(' '));
+    shared_ptr<REGEX> spaces = alt(alt(cha('\n'),cha('\t')),cha('\r'));
+
+    shared_ptr<REGEX> letters = range(set<char> (begin(characters), end(characters)));
+    shared_ptr<REGEX> symbols =  alt(letters,range(set<char> (begin(sym), end(sym))));
+   
+    
+    shared_ptr<REGEX> comment = seq(seq(seq(cha('/'),cha('/')),star(alt(alt(symbols,digit),cha(' ')))),spaces); 
+    shared_ptr<REGEX> string = seq(seq(cha('\"'),star(alt(alt(symbols,whitespaces),digit))),cha('\"'));
+
+
+    shared_ptr<REGEX> lang_regs = comment;
+
+    auto test = star(alt(alt(symbols,whitespaces),digit));
+    cout << matcher(string, "\"this is a test \nstring\"") << "\n";
+
     return 0;
 }
 
