@@ -1,5 +1,5 @@
 #include "value.cpp"
-#include "Exceptions/LexingError.cpp"
+
 
 class REGEX;
 class ZERO;
@@ -46,6 +46,7 @@ class REGEX{
         virtual shared_ptr<Val> mkeps() const {
             throw LexingError();
         }
+
 };
 
 class ZERO : public REGEX{
@@ -90,6 +91,11 @@ class ONE : public REGEX{
         }
 
         bool isOne()const {return true;}
+
+        shared_ptr<Val> mkeps() const {
+            shared_ptr<Empty> e(new Empty());
+            return e;
+        }
 };
 
 class CHAR : public REGEX{
@@ -118,11 +124,6 @@ class CHAR : public REGEX{
 
         shared_ptr<REGEX> simp() {
             return cha(c);
-        }
-
-        shared_ptr<Val> mkeps() const {
-            shared_ptr<Chr> e(new Chr(c));
-            return e;
         }
 };
 
@@ -476,6 +477,12 @@ shared_ptr<REGEX> stringList2rexp(const vector<string> & s){
         ret = alt(ret,string2rexp(s[i]));
   }
   return ret;
+}
+
+int main()
+{
+
+    cout << one()->mkeps()->inj(cha('c'),'c') << "\n";
 }
 
 // int main(){

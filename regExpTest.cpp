@@ -83,7 +83,7 @@ void testForSpeed()
     
 }
 
-int main()
-{
-    testForValidity();
-}
+// int main()
+// {
+//     testForValidity();
+// }

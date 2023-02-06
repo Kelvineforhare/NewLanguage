@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include "Exceptions/LexingError.cpp"
 
 using std::cout;
 using std::set;
@@ -16,6 +17,9 @@ using std::move;
 class Val{
     public:
         virtual string str() const = 0;
+        virtual shared_ptr<Val> inj(shared_ptr<REGEX> r, char c) const {
+            throw LexingError();
+        }
 };
 
 class Empty : public Val{
@@ -23,6 +27,10 @@ class Empty : public Val{
         string str()const{
             string ret = "Empty";
             return ret;
+        }
+        shared_ptr<Val> inj(shared_ptr<CHAR> r,char c) const {
+            shared_ptr<Chr> ch(new Chr(c));
+            return ch;
         }
 };
 
