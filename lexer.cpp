@@ -180,6 +180,7 @@ class Ntimes : public Val{
         }
 };
 
+//Regular expressions used to show what text should match
 
 shared_ptr<ZERO> zero();
 shared_ptr<ONE> one();
@@ -191,6 +192,8 @@ shared_ptr<PLUS> plus(shared_ptr<REGEX>);
 shared_ptr<NTIMES> ntimes(shared_ptr<REGEX>, int);
 shared_ptr<RANGE> range(set<char>);
 shared_ptr<ID> id(string,shared_ptr<REGEX>);
+
+//https://www.reddit.com/r/cpp_questions/comments/9w5u6k/shared_ptr_and_implicit_conversions/
 
 
 class REGEX{
