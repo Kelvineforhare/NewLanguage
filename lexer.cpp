@@ -28,9 +28,9 @@ class ID;
 class Val{
     public:
         virtual string str() const = 0;
-        // virtual shared_ptr<Val> inj(shared_ptr<REGEX> r, char c) const {
-        //     throw LexingError();
-        // }
+        virtual shared_ptr<Val> inj(shared_ptr<REGEX> r, char c) const {
+            throw LexingError();
+        }
 };
 
 class Chr : public Val{
@@ -85,6 +85,11 @@ class Right : public Val{
             s = s + v->str();
             s = s + " )";
             return s;
+        }
+
+        shared_ptr<Val> inj(shared_ptr<ALT> r,char c) const {
+            shared_ptr<Right> right(new Right(v->inj(r->getr2(),c)));
+            return right;
         }
 };
 
@@ -337,6 +342,16 @@ class ALT : public REGEX{
             }
             shared_ptr<Right> e(new Right(r2->mkeps()));
             return e;
+        }
+
+        shared_ptr<REGEX> getr1()
+        {
+            return r1;
+        }
+
+        shared_ptr<REGEX> getr2()
+        {
+            return r2;
         }
 };
 
