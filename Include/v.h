@@ -19,11 +19,12 @@ using std::move;
 
 class REGEX;
 class CHAR;
+class ALT;
 
 class Val{
     public:
         virtual string str() const = 0;
-        //virtual shared_ptr<Val> inj(shared_ptr<REGEX> r, char c) const;
+        virtual shared_ptr<Val> inj(shared_ptr<REGEX> r, char c) const;
 };
 
 class Empty : public Val{

@@ -13,9 +13,9 @@ using std::move;
 class Val{
     public:
         virtual string str() const = 0;
-        // virtual shared_ptr<Val> inj(shared_ptr<REGEX> r, char c) const {
-        //     throw LexingError();
-        // }
+        virtual shared_ptr<Val> inj(shared_ptr<REGEX> r, char c) const {
+            throw LexingError();
+        }
 };
 
 class Chr : public Val{

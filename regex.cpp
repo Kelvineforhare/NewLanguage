@@ -4,7 +4,7 @@
 
 class ZERO;
 class ONE;
-class ALT;
+//class ALT;
 class SEQ;
 class STAR;
 class PLUS;
