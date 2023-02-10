@@ -1,5 +1,5 @@
-#ifndef REGEX_H
-#define REGEX_H
+#ifndef REGEX_HPP
+#define REGEX_HPP
 
 #include <string>
 #include <vector>
@@ -7,13 +7,7 @@
 #include <set>
 #include <iostream>
 
-using std::cout;
-using std::set;
-using std::string;
-using std::vector;
-using std::unique_ptr;
-using std::shared_ptr;
-using std::move;
+
 
 class Val;
 
@@ -72,8 +66,8 @@ class ALT : public REGEX {
         std::string str() const;
         std::shared_ptr<REGEX> simp();
         std::shared_ptr<Val> mkeps() const;
-        shared_ptr<REGEX> getr1();
-        shared_ptr<REGEX> getr2();
+        std::shared_ptr<REGEX> getr1();
+        std::shared_ptr<REGEX> getr2();
 };
 
 class SEQ : public REGEX {

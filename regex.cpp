@@ -1,4 +1,4 @@
-#include "Include/v.h"
+#include "Include/v.hpp"
 #include "Exceptions/LexingError.cpp"
 
 
@@ -11,6 +11,14 @@ class PLUS;
 class NTIMES;
 class RANGE;
 class ID;
+
+using std::cout;
+using std::set;
+using std::string;
+using std::vector;
+using std::unique_ptr;
+using std::shared_ptr;
+using std::move;
 
 shared_ptr<ZERO> zero();
 shared_ptr<ONE> one();
@@ -488,6 +496,6 @@ shared_ptr<REGEX> stringList2rexp(const vector<string> & s){
 
 int main()
 {
-    shared_ptr<Empty> e(new Empty());
-    cout << e->inj(cha('c'),'c')->str() << "\n";
+    // shared_ptr<Empty> e(new Empty());
+    // cout << e->inj(cha('c'),'c')->str() << "\n";
 }

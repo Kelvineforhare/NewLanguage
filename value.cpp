@@ -1,5 +1,5 @@
 #include "Exceptions/LexingError.cpp"
-#include "Include/r.h"
+#include "Include/r.hpp"
 
 using std::cout;
 using std::set;
@@ -13,10 +13,12 @@ using std::move;
 class Val{
     public:
         virtual string str() const = 0;
-        virtual shared_ptr<Val> inj(shared_ptr<REGEX> r, char c) const {
-            throw LexingError();
-        }
+        // virtual shared_ptr<Val> inj(shared_ptr<REGEX> r, char c) const {
+        //     throw LexingError();
+        // }
 };
+
+
 
 class Chr : public Val{
     private:
@@ -38,10 +40,10 @@ class Empty : public Val{
             string ret = "Empty";
             return ret;
         }
-        shared_ptr<Val> inj(shared_ptr<CHAR> r,char c) const {
-            shared_ptr<Chr> ch(new Chr(c));
-            return ch;
-        }
+        // shared_ptr<Val> inj(shared_ptr<CHAR> r,char c) const {
+        //     shared_ptr<Chr> ch(new Chr(c));
+        //     return ch;
+        // }
 };
 
 
@@ -72,10 +74,10 @@ class Right : public Val{
             return s;
         }
 
-        shared_ptr<Val> inj(shared_ptr<ALT> r,char c) const {
-            //shared_ptr<Right> right(new Right(v->inj(r->getr2(),c)));
-            return nullptr;
-        }
+        // shared_ptr<Val> inj(shared_ptr<ALT> r,char c) const {
+        //     //shared_ptr<Right> right(new Right(v->inj(r->getr2(),c)));
+        //     return nullptr;
+        // }
 };
 
 class Sequ : public Val{
