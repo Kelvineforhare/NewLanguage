@@ -178,12 +178,6 @@ class Ntimes : public Val{
 
 
 
-int main()
-{
-    shared_ptr<Empty> e(new Empty());
-    //cout << e->inj(cha('c'),'c')->str() << "\n";
-}
-
 // int main(){
 //     string digitstr = "0123456789";
 //     string digitstr1 = "123456789";
