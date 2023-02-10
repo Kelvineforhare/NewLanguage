@@ -1,5 +1,4 @@
 #include "Include/v.hpp"
-#include "Exceptions/LexingError.cpp"
 
 
 class ZERO;
@@ -494,8 +493,4 @@ shared_ptr<REGEX> stringList2rexp(const vector<string> & s){
 }
 
 
-int main()
-{
-    // shared_ptr<Empty> e(new Empty());
-    // cout << e->inj(cha('c'),'c')->str() << "\n";
-}
+

@@ -6,6 +6,15 @@
 #include <memory>
 #include <set>
 #include <iostream>
+#include "../Exceptions/LexingError.cpp"
+
+using std::cout;
+using std::set;
+using std::string;
+using std::vector;
+using std::unique_ptr;
+using std::shared_ptr;
+using std::move;
 
 //https://www.youtube.com/watch?v=JVFjEJidilE
 
@@ -29,7 +38,9 @@ class Chr : public Val{
     private:
         char c;
     public:
-        Chr(char in);
+        Chr(char in){
+            c = in;
+        }
 
         std::string str()const;
 };

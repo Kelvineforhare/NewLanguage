@@ -1,5 +1,8 @@
-lexer: regex.o value.o 
-	g++ -std=c++11 regex.o value.o -o lexer
+lexer: regex.o value.o main.o
+	g++ -std=c++11 regex.o value.o main.o -o lexer
+
+main.o: main.cpp
+	g++ -std=c++11 -c main.cpp 
 
 value.o: value.cpp
 	g++ -std=c++11 -c value.cpp 

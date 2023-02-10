@@ -7,6 +7,13 @@
 #include <set>
 #include <iostream>
 
+using std::cout;
+using std::set;
+using std::string;
+using std::vector;
+using std::unique_ptr;
+using std::shared_ptr;
+using std::move;
 
 
 class Val;
