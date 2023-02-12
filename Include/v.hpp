@@ -6,7 +6,7 @@
 #include <memory>
 #include <set>
 #include <iostream>
-#include "../Exceptions/LexingError.cpp"
+
 
 using std::cout;
 using std::set;
@@ -17,22 +17,23 @@ using std::shared_ptr;
 using std::move;
 
 //https://www.youtube.com/watch?v=JVFjEJidilE
-
+//https://stackoverflow.com/questions/56842570/how-to-use-derived-parameter-in-an-overriding-function-without-dynamic-casting
 class REGEX;
-class CHAR;
-class ALT;
 
 class Val{
     public:
         virtual std::string str() const = 0;
-        //virtual std::shared_ptr<Val> inj(std::shared_ptr<REGEX> r, char c) const;
+        
+        virtual std::shared_ptr<Val> inj(std::shared_ptr<REGEX> r, char c) const;
 };
+
 
 class Empty : public Val{
     public:
         std::string str()const;
-        //std::shared_ptr<Val> inj(std::shared_ptr<CHAR> r,char c) const;
+        std::shared_ptr<Val> inj(std::shared_ptr<REGEX> r, char c) const override;
 };
+
 
 class Chr : public Val{
     private:
@@ -45,6 +46,7 @@ class Chr : public Val{
         std::string str()const;
 };
 
+
 class Left : public Val{
     private:
         std::shared_ptr<Val> v;
@@ -53,6 +55,7 @@ class Left : public Val{
 
         std::string str()const;
 };
+
 
 class Right : public Val{
     private:
@@ -64,6 +67,7 @@ class Right : public Val{
         //std::shared_ptr<Val> inj(std::shared_ptr<ALT> r,char c) const override;
 };
 
+
 class Sequ : public Val{
     private:
         std::shared_ptr<Val> v1;
@@ -74,6 +78,7 @@ class Sequ : public Val{
         std::string str()const;
 };
 
+
 class Stars : public Val{
     private:
         std::vector<std::shared_ptr<Val>> v;
@@ -82,6 +87,7 @@ class Stars : public Val{
 
         std::string str()const;
 };
+
 
 class Rec : public Val{
     private:
@@ -93,6 +99,7 @@ class Rec : public Val{
         std::string str()const;
 };
 
+
 class Plus : public Val{
     private:
         std::vector<std::shared_ptr<Val>> v;
@@ -102,6 +109,7 @@ class Plus : public Val{
         std::string str()const;
 };
 
+
 class Ntimes : public Val{
      private:
         std::vector<std::shared_ptr<Val>> v;
@@ -110,6 +118,7 @@ class Ntimes : public Val{
 
         std::string str()const;
 };
+
 
 
 
