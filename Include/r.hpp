@@ -97,6 +97,8 @@ class SEQ : public REGEX {
         std::string str() const override;
         std::shared_ptr<REGEX> simp() override;
         std::shared_ptr<Val> mkeps() const override;
+        std::shared_ptr<REGEX> getr1();
+        std::shared_ptr<REGEX> getr2();
 };
 
 class STAR : public REGEX {

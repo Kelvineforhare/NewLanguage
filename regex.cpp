@@ -279,6 +279,16 @@ shared_ptr<Val> SEQ::mkeps() const {
     return e;
 }
 
+shared_ptr<REGEX> SEQ::getr1()
+{
+    return r1;
+}
+
+shared_ptr<REGEX> SEQ::getr2()
+{
+    return r2;
+}
+
 
 
 //STAR

@@ -31,6 +31,7 @@ class Val{
 class Empty : public Val{
     public:
         std::string str()const;
+        //Cannot let inj take subclass of regex as input for other classes so have to use dynamic casting
         std::shared_ptr<Val> inj(std::shared_ptr<REGEX> r, char c) const override;
 };
 
@@ -64,7 +65,7 @@ class Right : public Val{
         Right(std::shared_ptr<Val> in):v(in){}
 
         std::string str()const;
-        //std::shared_ptr<Val> inj(std::shared_ptr<ALT> r,char c) const override;
+        std::shared_ptr<Val> inj(std::shared_ptr<REGEX> r,char c) const override;
 };
 
 

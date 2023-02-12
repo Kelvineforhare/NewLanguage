@@ -1,15 +1,22 @@
-//#include "Include/r.hpp"
+#include "Include/r.hpp"
 #include "Include/v.hpp"
 #include "Exceptions/LexingError.cpp"
 
+//Val
 std::shared_ptr<Val> Val::inj(std::shared_ptr<REGEX> r, char c) const{
      throw LexingError();
 }
 
+
+
+//Chr
 string Chr::str()const{
     return string(1,c);
 }
 
+
+
+//Empty
 string Empty::str()const{
     string ret = "Empty";
     return ret;
@@ -21,6 +28,7 @@ shared_ptr<Val> Empty::inj(shared_ptr<REGEX> r, char c) const{
 }
 
 
+//Left
 string Left::str()const{
     string s = "Left( ";
     s = s + v->str();
@@ -30,12 +38,34 @@ string Left::str()const{
 
 
 
+//Right
 string Right::str()const{
     string s = "Right( ";
     s = s + v->str();
     s = s + " )";
     return s;
 }
+
+std::shared_ptr<Val> Right::inj(std::shared_ptr<REGEX> r,char c) const {
+    cout << r->str() << "\n";
+
+    std::shared_ptr<SEQ> p1 = std::dynamic_pointer_cast<SEQ>(r);
+    if(p1 != nullptr){
+        std::shared_ptr<Val> ret(new Sequ(p1->getr1()->mkeps(),v->inj(p1->getr2(),c)));
+        return ret;
+    }
+
+    std::shared_ptr<ALT> p2 = std::dynamic_pointer_cast<ALT>(r);
+    if(p2 != nullptr){
+        std::shared_ptr<Val> ret(new Right(v->inj(p2->getr2(),c)));
+        return ret;
+    }
+    throw LexingError();
+    return nullptr;
+}
+
+
+
 
 string Sequ::str()const{
     string s = "Sequ(";
