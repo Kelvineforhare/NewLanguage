@@ -55,6 +55,7 @@ class Left : public Val{
         Left(std::shared_ptr<Val> in):v(in){}
 
         std::string str()const;
+        std::shared_ptr<Val> inj(std::shared_ptr<REGEX> r, char c) const override;
 };
 
 
@@ -77,6 +78,8 @@ class Sequ : public Val{
         Sequ(std::shared_ptr<Val> in,std::shared_ptr<Val> in2):v1(in),v2(in2){}
 
         std::string str()const;
+        std::shared_ptr<Val> getr1();
+        std::shared_ptr<Val> getr2();
 };
 
 

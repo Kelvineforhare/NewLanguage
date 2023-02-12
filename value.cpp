@@ -4,6 +4,7 @@
 
 //Val
 std::shared_ptr<Val> Val::inj(std::shared_ptr<REGEX> r, char c) const{
+    //check  if ID regex
      throw LexingError();
 }
 
@@ -34,6 +35,27 @@ string Left::str()const{
     s = s + v->str();
     s = s + " )";
     return s;
+}
+
+std::shared_ptr<Val> Left::inj(std::shared_ptr<REGEX> r, char c) const{
+    cout << r->str() << "\n";
+
+    std::shared_ptr<ALT> p1 = std::dynamic_pointer_cast<ALT>(r);
+    if(p1 != nullptr){
+        std::shared_ptr<Val> ret(new Left(v->inj(p1->getr1(),c)));
+        return ret;
+    }
+
+    std::shared_ptr<SEQ> p2 = std::dynamic_pointer_cast<SEQ>(r);
+    if(p2 != nullptr){
+        std::shared_ptr<Sequ> p3 = std::dynamic_pointer_cast<Sequ>(v);
+        if(p3 != nullptr){
+            std::shared_ptr<Val> ret(new Sequ(p3->getr1()->inj(p2->getr1(),c),p3->getr2()));
+            return ret;
+        }
+    }
+    throw LexingError();
+    return nullptr;
 }
 
 
@@ -74,6 +96,13 @@ string Sequ::str()const{
     s = s + v2->str();
     s = s + ")";
     return s;
+}
+
+std::shared_ptr<Val> Sequ::getr1(){
+    return v1;
+}
+std::shared_ptr<Val> Sequ::getr2(){
+    return v2;
 }
 
 string Stars::str()const{

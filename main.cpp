@@ -5,8 +5,8 @@
 
 int main()
 {
-    shared_ptr<Val> e(new Right(shared_ptr<Val>(new Empty())));
-    cout << e->inj(alt(zero(),one()),'d')->str() << "\n";
+    shared_ptr<Val> e(new Left(shared_ptr<Val>(new Sequ(shared_ptr<Val>(new Empty()),shared_ptr<Val>(new Empty())))));
+    cout << e->inj(seq(one(),one()),'d')->str() << "\n";
 }
 
 // int main(){
