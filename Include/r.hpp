@@ -111,7 +111,7 @@ class STAR : public REGEX {
         std::string str() const override;
         std::shared_ptr<REGEX> simp() override;
         std::shared_ptr<Val> mkeps() const override; 
-
+        std::shared_ptr<REGEX> getr() const;
 };
 
 class PLUS : public REGEX {
@@ -124,6 +124,7 @@ class PLUS : public REGEX {
         std::string str() const override;
         std::shared_ptr<REGEX> simp() override;
         std::shared_ptr<Val> mkeps() const override;
+        std::shared_ptr<REGEX> getr() const;
 };
 
 class NTIMES : public REGEX {
@@ -137,6 +138,7 @@ class NTIMES : public REGEX {
         std::string str() const override;
         std::shared_ptr<REGEX> simp() override;
         std::shared_ptr<Val> mkeps() const override;
+        std::shared_ptr<REGEX> getr() const;
 };
 
 class RANGE : public REGEX{
@@ -163,6 +165,8 @@ class ID : public REGEX {
         std::string str() const override;
         std::shared_ptr<REGEX> simp() override;
         std::shared_ptr<Val> mkeps() const override;
+        std::string getStr() const;
+        std::shared_ptr<REGEX> getr() const;
 };
 
 std::shared_ptr<ONE> one();

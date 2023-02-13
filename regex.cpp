@@ -313,6 +313,10 @@ shared_ptr<Val> STAR::mkeps() const {
     return e;
 }
 
+std::shared_ptr<REGEX> STAR::getr() const{
+    return r1;
+}
+
 
 
 //PLUS
@@ -335,6 +339,10 @@ shared_ptr<REGEX> PLUS::simp(){
 shared_ptr<Val> PLUS::mkeps() const {
     shared_ptr<Plus> e(new Plus(vector<shared_ptr<Val>>{r1->mkeps()}));
     return e;
+}
+
+std::shared_ptr<REGEX> PLUS::getr() const{
+    return r1;
 }
 
 
@@ -366,6 +374,10 @@ shared_ptr<Val> NTIMES::mkeps() const {
     }
     shared_ptr<Ntimes> e(new Ntimes(vector<shared_ptr<Val>>{r1->mkeps()}));
     return e;
+}
+
+std::shared_ptr<REGEX> NTIMES::getr() const{
+    return r1;
 }
 
 
@@ -418,6 +430,14 @@ shared_ptr<Val> ID::mkeps() const {
     shared_ptr<Rec> e(new Rec(s,r1->mkeps()));
     return e;
 }
+
+ std::string ID::getStr() const{
+    return s;
+ }
+
+ std::shared_ptr<REGEX> ID::getr() const{
+    return r1;
+ }
 
 
 

@@ -78,8 +78,9 @@ class Sequ : public Val{
         Sequ(std::shared_ptr<Val> in,std::shared_ptr<Val> in2):v1(in),v2(in2){}
 
         std::string str()const;
-        std::shared_ptr<Val> getr1();
-        std::shared_ptr<Val> getr2();
+        std::shared_ptr<Val> inj(std::shared_ptr<REGEX> r, char c) const override;
+        std::shared_ptr<Val> getr1() const;
+        std::shared_ptr<Val> getr2() const;
 };
 
 
@@ -90,6 +91,7 @@ class Stars : public Val{
         Stars(std::vector<std::shared_ptr<Val>> in):v(in){}
 
         std::string str()const;
+        std::vector<std::shared_ptr<Val>> getList();
 };
 
 
@@ -121,6 +123,7 @@ class Ntimes : public Val{
         Ntimes(std::vector<std::shared_ptr<Val>> in):v(in){}
 
         std::string str()const;
+        std::vector<std::shared_ptr<Val>> getList();
 };
 
 

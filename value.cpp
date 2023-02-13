@@ -5,7 +5,11 @@
 //Val
 std::shared_ptr<Val> Val::inj(std::shared_ptr<REGEX> r, char c) const{
     //check  if ID regex
-     throw LexingError();
+    std::shared_ptr<ID> p1 = std::dynamic_pointer_cast<ID>(r);
+    if(p1 != nullptr){
+        std::shared_ptr<Val> ret(new Rec(p1->getStr(),this->inj(p1->getr(),c)));
+    }
+    throw LexingError();
 }
 
 
@@ -88,7 +92,7 @@ std::shared_ptr<Val> Right::inj(std::shared_ptr<REGEX> r,char c) const {
 
 
 
-
+//Sequ
 string Sequ::str()const{
     string s = "Sequ(";
     s = s + v1->str();
@@ -98,10 +102,55 @@ string Sequ::str()const{
     return s;
 }
 
-std::shared_ptr<Val> Sequ::getr1(){
+//(STAR(r), Sequ(v1, Stars(vs))) => Stars(inj(r, c, v1)::vs)
+//(SEQ(r1, r2), Sequ(v1, v2)) => Sequ(inj(r1, c, v1), v2)
+//(PLUS(r1), Sequ(v, Stars(values))) => Plus(inj(r1, c, v)::values)
+//(NTIMES(r1,_), Sequ(r, Ntimes(cs))) => Ntimes(inj(r1, c, r)::cs)
+std::shared_ptr<Val> Sequ::inj(std::shared_ptr<REGEX> r, char c) const{
+    std::shared_ptr<SEQ> p1 = std::dynamic_pointer_cast<SEQ>(r);
+    if(p1 != nullptr){
+        std::shared_ptr<Val> ret(new Sequ(v1->inj(p1->getr1(),c),v2));
+        return ret;
+    }
+    std::shared_ptr<STAR> p2 = std::dynamic_pointer_cast<STAR>(r);
+    if(p2 != nullptr){
+        std::shared_ptr<Stars> p3 = std::dynamic_pointer_cast<Stars>(v2);
+        (!p3)?:throw LexingError();
+        std::vector<std::shared_ptr<Val>> newList = p3->getList();
+        newList.insert(newList.begin(),v1->inj(p2->getr(),c));
+        std::shared_ptr<Val> ret(new Stars(newList));
+        return ret;
+    } 
+    std::shared_ptr<PLUS> p4 = std::dynamic_pointer_cast<PLUS>(r);
+    if(p4 != nullptr){
+        std::shared_ptr<Stars> p5 = std::dynamic_pointer_cast<Stars>(v2);
+        (!p5)?:throw LexingError();
+        std::vector<std::shared_ptr<Val>> newList = p5->getList();
+        newList.insert(newList.begin(),v1->inj(p4->getr(),c));
+        std::shared_ptr<Val> ret(new Plus(newList));
+        return ret;
+    } 
+    std::shared_ptr<NTIMES> p6 = std::dynamic_pointer_cast<NTIMES>(r);
+    if(p6 != nullptr){
+        std::shared_ptr<Ntimes> p7 = std::dynamic_pointer_cast<Ntimes>(v2);
+        (!p7)?:throw LexingError();
+        std::vector<std::shared_ptr<Val>> newList = p7->getList();
+        newList.insert(newList.begin(),v1->inj(p6->getr(),c));
+        std::shared_ptr<Val> ret(new Ntimes(newList));
+        return ret;
+    }
+    throw LexingError();
+    return nullptr;
+}
+
+std::vector<std::shared_ptr<Val>> Stars::getList(){
+    return v;
+}
+
+std::shared_ptr<Val> Sequ::getr1() const{
     return v1;
 }
-std::shared_ptr<Val> Sequ::getr2(){
+std::shared_ptr<Val> Sequ::getr2() const{
     return v2;
 }
 
@@ -149,6 +198,10 @@ string Ntimes::str()const{
     }
     s = s + " )";
     return s;
+}
+
+std::vector<std::shared_ptr<Val>> Ntimes::getList(){
+    return v;
 }
 
 

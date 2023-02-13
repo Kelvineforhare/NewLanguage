@@ -5,8 +5,10 @@
 
 int main()
 {
-    shared_ptr<Val> e(new Left(shared_ptr<Val>(new Sequ(shared_ptr<Val>(new Empty()),shared_ptr<Val>(new Empty())))));
-    cout << e->inj(seq(one(),one()),'d')->str() << "\n";
+    shared_ptr<REGEX> r = seq(cha('a'),cha('b'));
+    cout << ders(vector<char>{'a','b'},r)->str() << " :ders\n";
+    cout << ders(vector<char>{'a','b'},r)->mkeps()->str() << " :mkeps\n";
+    cout << ders(vector<char>{'a','b'},r)->mkeps()->inj(seq(one(),one()),'b')->str() << " inj\n";
 }
 
 // int main(){
