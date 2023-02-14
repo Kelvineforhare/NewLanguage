@@ -1,14 +1,21 @@
 #include "Include/r.hpp"
 #include "Include/v.hpp"
+#include "Exceptions/LexingError.cpp"
 
 
+//https://www.geeksforgeeks.org/passing-a-function-as-a-parameter-in-cpp/
+std::shared_ptr<Val> lex(std::shared_ptr<REGEX> r,string s, int i){
+    if(i > s.size()){
+        (!r->nullable())?:throw LexingError();
+        return r->mkeps();
+    }
+    der(s[i],r)->simp();
+}
 
 int main()
 {
-    shared_ptr<REGEX> r = seq(cha('a'),cha('b'));
-    cout << ders(vector<char>{'a','b'},r)->str() << " :ders\n";
-    cout << ders(vector<char>{'a','b'},r)->mkeps()->str() << " :mkeps\n";
-    cout << ders(vector<char>{'a','b'},r)->mkeps()->inj(seq(one(),one()),'b')->str() << " inj\n";
+    shared_ptr<REGEX> reg = seq(one(),one());
+    //for lexing keep a list of regular expressions to go back on?
 }
 
 // int main(){
@@ -41,4 +48,14 @@ int main()
 //     cout << seq(one(),star(one()))->mkeps()->str() << "\n";
 
 //     return 0;
+// }
+
+
+// def lex_simp(r: Rexp, s: List[Char]) : Val = s match {
+//   case Nil => if (nullable(r)) mkeps(r) else 
+//     { throw new Exception("lexing error") } 
+//   case c::cs => {
+//     val (r_simp, f_simp) = simp(der(c, r))
+//     inj(r, c, f_simp(lex_simp(r_simp, cs)))
+//   }
 // }
