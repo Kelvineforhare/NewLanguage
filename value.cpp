@@ -16,7 +16,8 @@ std::shared_ptr<Val> Val::inj(std::shared_ptr<REGEX> r, char c) const{
 
 //Chr
 string Chr::str()const{
-    return string(1,c);
+    string s(1, c);
+    return s;
 }
 
 
@@ -73,11 +74,13 @@ string Right::str()const{
 }
 
 std::shared_ptr<Val> Right::inj(std::shared_ptr<REGEX> r,char c) const {
-    cout << r->str() << "\n";
-
     std::shared_ptr<SEQ> p1 = std::dynamic_pointer_cast<SEQ>(r);
     if(p1 != nullptr){
+        cout << string(1,c) << "\n";
+        printf("%d", c); //input char becomes empty ????
         std::shared_ptr<Val> ret(new Sequ(p1->getr1()->mkeps(),v->inj(p1->getr2(),c)));
+       
+        // cout << v->inj(p1->getr2(),c)->str() << "\n";
         return ret;
     }
 

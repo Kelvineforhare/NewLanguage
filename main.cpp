@@ -7,12 +7,15 @@
 std::shared_ptr<Val> lex(std::shared_ptr<REGEX> r,string s, int i){
     if(i >= s.size()){
         (r->nullable())?:throw LexingError();
+        cout << r->str() << "\n";
         std::shared_ptr<Val> ret = r->mkeps();
         cout << ret->str() << "mkeps \n";
         return ret;
     }
     //lex(der(s[i],r)->simp(),s,++i)->inj(r,s[i]);
+    cout << r->str() << "\n";
     shared_ptr<REGEX> reg = der(s[i],r);
+    cout << string(1,s[i]) << " input\n";
     std::shared_ptr<Val> val = lex(reg,s,++i)->inj(r,s[i]);
     cout << val->str() << "\n";
     return val;
