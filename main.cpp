@@ -5,16 +5,24 @@
 
 //https://www.geeksforgeeks.org/passing-a-function-as-a-parameter-in-cpp/
 std::shared_ptr<Val> lex(std::shared_ptr<REGEX> r,string s, int i){
-    if(i > s.size()){
-        (!r->nullable())?:throw LexingError();
-        return r->mkeps();
+    if(i >= s.size()){
+        (r->nullable())?:throw LexingError();
+        std::shared_ptr<Val> ret = r->mkeps();
+        cout << ret->str() << "mkeps \n";
+        return ret;
     }
-    der(s[i],r)->simp();
+    //lex(der(s[i],r)->simp(),s,++i)->inj(r,s[i]);
+    shared_ptr<REGEX> reg = der(s[i],r);
+    std::shared_ptr<Val> val = lex(reg,s,++i)->inj(r,s[i]);
+    cout << val->str() << "\n";
+    return val;
 }
 
 int main()
 {
-    shared_ptr<REGEX> reg = seq(one(),one());
+    shared_ptr<REGEX> reg = seq(cha('a'),cha('b'));
+    //cout << der('a',reg)->str() << "\n";
+    cout << lex(reg,"ab",0)->str() << "\n";
     //for lexing keep a list of regular expressions to go back on?
 }
 
