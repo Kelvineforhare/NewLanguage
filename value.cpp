@@ -3,19 +3,33 @@
 #include "Exceptions/LexingError.cpp"
 
 //Val
-std::shared_ptr<Val> Val::inj(std::shared_ptr<REGEX> r, char c) const{
-    //check  if ID regex
-    std::shared_ptr<ID> p1 = std::dynamic_pointer_cast<ID>(r);
+
+shared_ptr<Val> Val::inj(shared_ptr<REGEX> r, char c) const{
+    shared_ptr<ID> p1 = dynamic_pointer_cast<ID>(r);
     if(p1 != nullptr){
-        std::shared_ptr<Val> ret(new Rec(p1->getStr(),this->inj(p1->getr(),c)));
+        shared_ptr<Val> ret(new Rec(p1->getStr(),this->inject(p1->getr(),c)));
+        return ret;
     }
-    throw LexingError();
+    return this->inject(r,c);
 }
 
+shared_ptr<Val> Val::inject(shared_ptr<REGEX> r, char c) const{
+    throw LexingError();
+    return nullptr;
+}
+
+vector<pair<string,string>> Val::env()const{
+    return vector<pair<string,string>>{};
+}
 
 
 //Chr
 string Chr::str()const{
+    string s(1, c);
+    return s;
+}
+
+string Chr::flatten()const{
     string s(1, c);
     return s;
 }
@@ -28,10 +42,15 @@ string Empty::str()const{
     return ret;
 }
 
-shared_ptr<Val> Empty::inj(shared_ptr<REGEX> r, char c) const{
+shared_ptr<Val> Empty::inject(shared_ptr<REGEX> r, char c) const{
     shared_ptr<Val> e(new Chr(c));
     return e;
 }
+
+string Empty::flatten()const{
+    return "";
+}
+
 
 
 //Left
@@ -42,20 +61,19 @@ string Left::str()const{
     return s;
 }
 
-std::shared_ptr<Val> Left::inj(std::shared_ptr<REGEX> r, char c) const{
-    cout << r->str() << "\n";
+shared_ptr<Val> Left::inject(shared_ptr<REGEX> r, char c) const{
 
-    std::shared_ptr<ALT> p1 = std::dynamic_pointer_cast<ALT>(r);
+    shared_ptr<ALT> p1 = dynamic_pointer_cast<ALT>(r);
     if(p1 != nullptr){
-        std::shared_ptr<Val> ret(new Left(v->inj(p1->getr1(),c)));
+        shared_ptr<Val> ret(new Left(v->inject(p1->getr1(),c)));
         return ret;
     }
 
-    std::shared_ptr<SEQ> p2 = std::dynamic_pointer_cast<SEQ>(r);
+    shared_ptr<SEQ> p2 = dynamic_pointer_cast<SEQ>(r);
     if(p2 != nullptr){
-        std::shared_ptr<Sequ> p3 = std::dynamic_pointer_cast<Sequ>(v);
+        shared_ptr<Sequ> p3 = dynamic_pointer_cast<Sequ>(v);
         if(p3 != nullptr){
-            std::shared_ptr<Val> ret(new Sequ(p3->getr1()->inj(p2->getr1(),c),p3->getr2()));
+            shared_ptr<Val> ret(new Sequ(p3->getr1()->inject(p2->getr1(),c),p3->getr2()));
             return ret;
         }
     }
@@ -63,6 +81,14 @@ std::shared_ptr<Val> Left::inj(std::shared_ptr<REGEX> r, char c) const{
     return nullptr;
 }
 
+vector<pair<string,string>> Left::env()const{
+    return v->env();
+}
+
+
+string Left::flatten()const{
+    return v->flatten();
+}
 
 
 //Right
@@ -73,24 +99,28 @@ string Right::str()const{
     return s;
 }
 
-std::shared_ptr<Val> Right::inj(std::shared_ptr<REGEX> r,char c) const {
-    std::shared_ptr<SEQ> p1 = std::dynamic_pointer_cast<SEQ>(r);
-    if(p1 != nullptr){
-        cout << string(1,c) << "\n";
-        printf("%d", c); //input char becomes empty ????
-        std::shared_ptr<Val> ret(new Sequ(p1->getr1()->mkeps(),v->inj(p1->getr2(),c)));
-       
-        // cout << v->inj(p1->getr2(),c)->str() << "\n";
+shared_ptr<Val> Right::inject(shared_ptr<REGEX> r,char c) const {
+    shared_ptr<SEQ> p1 = dynamic_pointer_cast<SEQ>(r);  
+    if(p1 != nullptr){       
+        shared_ptr<Val> ret(new Sequ(p1->getr1()->mkeps(),v->inject(p1->getr2(),c)));
         return ret;
     }
 
-    std::shared_ptr<ALT> p2 = std::dynamic_pointer_cast<ALT>(r);
+    shared_ptr<ALT> p2 = dynamic_pointer_cast<ALT>(r);
     if(p2 != nullptr){
-        std::shared_ptr<Val> ret(new Right(v->inj(p2->getr2(),c)));
+        shared_ptr<Val> ret(new Right(v->inject(p2->getr2(),c)));
         return ret;
     }
     throw LexingError();
     return nullptr;
+}
+
+vector<pair<string,string>> Right::env()const{
+    return v->env();
+}
+
+string Right::flatten()const{
+    return v->flatten();
 }
 
 
@@ -105,58 +135,68 @@ string Sequ::str()const{
     return s;
 }
 
-//(STAR(r), Sequ(v1, Stars(vs))) => Stars(inj(r, c, v1)::vs)
-//(SEQ(r1, r2), Sequ(v1, v2)) => Sequ(inj(r1, c, v1), v2)
-//(PLUS(r1), Sequ(v, Stars(values))) => Plus(inj(r1, c, v)::values)
-//(NTIMES(r1,_), Sequ(r, Ntimes(cs))) => Ntimes(inj(r1, c, r)::cs)
-std::shared_ptr<Val> Sequ::inj(std::shared_ptr<REGEX> r, char c) const{
-    std::shared_ptr<SEQ> p1 = std::dynamic_pointer_cast<SEQ>(r);
+shared_ptr<Val> Sequ::inject(shared_ptr<REGEX> r, char c) const{
+    shared_ptr<SEQ> p1 = dynamic_pointer_cast<SEQ>(r);
     if(p1 != nullptr){
-        std::shared_ptr<Val> ret(new Sequ(v1->inj(p1->getr1(),c),v2));
+        shared_ptr<Val> ret(new Sequ(v1->inject(p1->getr1(),c),v2));
         return ret;
     }
-    std::shared_ptr<STAR> p2 = std::dynamic_pointer_cast<STAR>(r);
+    shared_ptr<STAR> p2 = dynamic_pointer_cast<STAR>(r);
     if(p2 != nullptr){
-        std::shared_ptr<Stars> p3 = std::dynamic_pointer_cast<Stars>(v2);
+        shared_ptr<Stars> p3 = dynamic_pointer_cast<Stars>(v2);
         (p3)?:throw LexingError();
-        std::vector<std::shared_ptr<Val>> newList = p3->getList();
-        newList.insert(newList.begin(),v1->inj(p2->getr(),c));
-        std::shared_ptr<Val> ret(new Stars(newList));
+        vector<shared_ptr<Val>> newList = p3->getList();
+        newList.insert(newList.begin(),v1->inject(p2->getr(),c));
+        shared_ptr<Val> ret(new Stars(newList));
         return ret;
     } 
-    std::shared_ptr<PLUS> p4 = std::dynamic_pointer_cast<PLUS>(r);
+    shared_ptr<PLUS> p4 = dynamic_pointer_cast<PLUS>(r);
     if(p4 != nullptr){
-        std::shared_ptr<Stars> p5 = std::dynamic_pointer_cast<Stars>(v2);
+        shared_ptr<Stars> p5 = dynamic_pointer_cast<Stars>(v2);
         (p5)?:throw LexingError();
-        std::vector<std::shared_ptr<Val>> newList = p5->getList();
-        newList.insert(newList.begin(),v1->inj(p4->getr(),c));
-        std::shared_ptr<Val> ret(new Plus(newList));
+        vector<shared_ptr<Val>> newList = p5->getList();
+        newList.insert(newList.begin(),v1->inject(p4->getr(),c));
+        shared_ptr<Val> ret(new Plus(newList));
         return ret;
     } 
-    std::shared_ptr<NTIMES> p6 = std::dynamic_pointer_cast<NTIMES>(r);
+    shared_ptr<NTIMES> p6 = dynamic_pointer_cast<NTIMES>(r);
     if(p6 != nullptr){
-        std::shared_ptr<Ntimes> p7 = std::dynamic_pointer_cast<Ntimes>(v2);
+        shared_ptr<Ntimes> p7 = dynamic_pointer_cast<Ntimes>(v2);
         (p7)?:throw LexingError();
-        std::vector<std::shared_ptr<Val>> newList = p7->getList();
-        newList.insert(newList.begin(),v1->inj(p6->getr(),c));
-        std::shared_ptr<Val> ret(new Ntimes(newList));
+        vector<shared_ptr<Val>> newList = p7->getList();
+        newList.insert(newList.begin(),v1->inject(p6->getr(),c));
+        shared_ptr<Val> ret(new Ntimes(newList));
         return ret;
     }
     throw LexingError();
     return nullptr;
 }
 
-std::vector<std::shared_ptr<Val>> Stars::getList(){
-    return v;
-}
-
-std::shared_ptr<Val> Sequ::getr1() const{
+shared_ptr<Val> Sequ::getr1() const{
     return v1;
 }
-std::shared_ptr<Val> Sequ::getr2() const{
+shared_ptr<Val> Sequ::getr2() const{
     return v2;
 }
 
+vector<pair<string,string>> Sequ::env() const{
+    vector<pair<string,string>> e1 = v1->env();
+    vector<pair<string,string>> e2 = v2->env();
+    vector<pair<string,string>> ret;
+    ret.reserve(e1.size() + e1.size());
+    ret.insert(ret.end(), e1.begin(), e2.end());
+    ret.insert(ret.end(), e2.begin(), e2.end());
+    return ret;
+}
+
+
+string Sequ::flatten()const{
+    return v1->flatten() + v2->flatten();
+}
+
+
+
+//Stars
 string Stars::str()const{
     if(v.size() == 0){
         return "Stars(Nil)";
@@ -170,13 +210,48 @@ string Stars::str()const{
     return s;
 }
 
+vector<shared_ptr<Val>> Stars::getList(){
+    return v;
+}
+
+vector<pair<string,string>> Stars::env() const{
+    vector<pair<string,string>> ret;
+    for(int i = 0; i < v.size();++i){
+        vector<pair<string,string>> add = v[i]->env();
+        ret.insert(ret.end(), add.begin(), add.end());
+    }
+    return ret;
+}
+
+string Stars::flatten()const{
+    string ret = "";
+    for(int i = 0; i < v.size();++i){
+        ret = ret + v[i]->flatten();
+    }
+    return ret;
+}
+
+
+
+//Rec
 string Rec::str()const{
     string ret = "Rec( ";
-    ret = s + " , " + v->str();
+    ret = ret + s + " , " + v->str();
     ret = ret + " )";
     return ret;
 }
 
+vector<pair<string,string>> Rec::env() const{
+    vector<pair<string,string>> ret{pair<string,string>{s,v->flatten()}};
+    return ret;
+}
+
+string Rec::flatten()const{
+    return v->flatten();
+}
+
+
+//Plus
 string Plus::str()const{
     if(v.size() == 0){
         return "Plus(Nil)";
@@ -190,6 +265,28 @@ string Plus::str()const{
     return s;
 }
 
+
+vector<pair<string,string>> Plus::env() const{
+    vector<pair<string,string>> ret;
+    for(int i = 0; i < v.size();++i){
+        vector<pair<string,string>> add = v[i]->env();
+        ret.insert(ret.end(), add.begin(), add.end());
+    }
+    return ret;
+}
+
+
+string Plus::flatten()const{
+    string ret = "";
+    for(int i = 0; i < v.size();++i){
+        ret = ret + v[i]->flatten();
+    }
+    return ret;
+}
+
+
+
+//Ntimes
 string Ntimes::str()const{
     if(v.size() == 0){
         return "Ntimes(Nil)";
@@ -203,15 +300,29 @@ string Ntimes::str()const{
     return s;
 }
 
-std::vector<std::shared_ptr<Val>> Ntimes::getList(){
+vector<shared_ptr<Val>> Ntimes::getList(){
     return v;
 }
 
 
-//Regular expressions used to show what text should match
+vector<pair<string,string>> Ntimes::env() const{
+    vector<pair<string,string>> ret;
+    for(int i = 0; i < v.size();++i){
+        vector<pair<string,string>> add = v[i]->env();
+        ret.insert(ret.end(), add.begin(), add.end());
+    }
+    return ret;
+}
+
+string Ntimes::flatten()const{
+    string ret = "";
+    for(int i = 0; i < v.size();++i){
+        ret = ret + v[i]->flatten();
+    }
+    return ret;
+}
 
 
-//https://www.reddit.com/r/cpp_questions/comments/9w5u6k/shared_ptr_and_implicit_conversions/
 
 
 

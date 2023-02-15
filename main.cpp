@@ -1,31 +1,45 @@
 #include "Include/r.hpp"
 #include "Include/v.hpp"
 #include "Exceptions/LexingError.cpp"
+#include <cstdlib>
 
+std::ostream& operator<<(std::ostream& os,  std::pair<string,string> const& p)
+{
+    os << "(" << p.first << "," << p.second << ")";
+    return os;
+}
 
 //https://www.geeksforgeeks.org/passing-a-function-as-a-parameter-in-cpp/
 std::shared_ptr<Val> lex(std::shared_ptr<REGEX> r,string s, int i){
     if(i >= s.size()){
         (r->nullable())?:throw LexingError();
-        cout << r->str() << "\n";
         std::shared_ptr<Val> ret = r->mkeps();
-        cout << ret->str() << "mkeps \n";
         return ret;
     }
     //lex(der(s[i],r)->simp(),s,++i)->inj(r,s[i]);
-    cout << r->str() << "\n";
     shared_ptr<REGEX> reg = der(s[i],r);
-    cout << string(1,s[i]) << " input\n";
-    std::shared_ptr<Val> val = lex(reg,s,++i)->inj(r,s[i]);
-    cout << val->str() << "\n";
+    ++i;
+    std::shared_ptr<Val> val = nullptr;
+    try {
+        val = lex(reg,s,i)->inj(r,s[i-1]);
+        cout << val->str() << "\n";
+    }
+    catch(LexingError e){
+        cout << e.what() <<"\n";
+        exit(0);
+    }
     return val;
 }
 
 int main()
 {
-    shared_ptr<REGEX> reg = seq(cha('a'),cha('b'));
+    shared_ptr<REGEX> reg = id("abs",alt(cha('a'),star(cha('b'))));
     //cout << der('a',reg)->str() << "\n";
-    cout << lex(reg,"ab",0)->str() << "\n";
+    auto ret = lex(reg,"bbbbb",0)->env();
+    for(int i =0; i < ret.size();++i){
+        cout << ret[i] << ",";
+    }
+    cout << "\n";
     //for lexing keep a list of regular expressions to go back on?
 }
 
