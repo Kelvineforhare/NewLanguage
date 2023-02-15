@@ -77,6 +77,7 @@ shared_ptr<Val> Left::inject(shared_ptr<REGEX> r, char c) const{
             return ret;
         }
     }
+    //call super class
     throw LexingError("Left Injection line 80 " + r->str() + " " + typeid(*r).name());
     return nullptr;
 }
