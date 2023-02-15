@@ -65,7 +65,7 @@ shared_ptr<Val> Left::inject(shared_ptr<REGEX> r, char c) const{
 
     shared_ptr<ALT> p1 = dynamic_pointer_cast<ALT>(r);
     if(p1 != nullptr){
-        shared_ptr<Val> ret(new Left(v->inject(p1->getr1(),c)));
+        shared_ptr<Val> ret(new Left(v->inj(p1->getr1(),c)));
         return ret;
     }
 
@@ -73,12 +73,11 @@ shared_ptr<Val> Left::inject(shared_ptr<REGEX> r, char c) const{
     if(p2 != nullptr){
         shared_ptr<Sequ> p3 = dynamic_pointer_cast<Sequ>(v);
         if(p3 != nullptr){
-            shared_ptr<Val> ret(new Sequ(p3->getr1()->inject(p2->getr1(),c),p3->getr2()));
+            shared_ptr<Val> ret(new Sequ(p3->getr1()->inj(p2->getr1(),c),p3->getr2()));
             return ret;
         }
     }
-    //call super class
-    throw LexingError("Left Injection line 80 " + r->str() + " " + typeid(*r).name());
+    throw LexingError("Left Injection line 80 " + r->str() + " " + typeid(*r).name() + " " + this->str() + " " + c);
     return nullptr;
 }
 
@@ -103,13 +102,13 @@ string Right::str()const{
 shared_ptr<Val> Right::inject(shared_ptr<REGEX> r,char c) const {
     shared_ptr<SEQ> p1 = dynamic_pointer_cast<SEQ>(r);  
     if(p1 != nullptr){       
-        shared_ptr<Val> ret(new Sequ(p1->getr1()->mkeps(),v->inject(p1->getr2(),c)));
+        shared_ptr<Val> ret(new Sequ(p1->getr1()->mkeps(),v->inj(p1->getr2(),c)));
         return ret;
     }
 
     shared_ptr<ALT> p2 = dynamic_pointer_cast<ALT>(r);
     if(p2 != nullptr){
-        shared_ptr<Val> ret(new Right(v->inject(p2->getr2(),c)));
+        shared_ptr<Val> ret(new Right(v->inj(p2->getr2(),c)));
         return ret;
     }
     throw LexingError("Right injection line 114 " + r->str());
@@ -139,7 +138,7 @@ string Sequ::str()const{
 shared_ptr<Val> Sequ::inject(shared_ptr<REGEX> r, char c) const{
     shared_ptr<SEQ> p1 = dynamic_pointer_cast<SEQ>(r);
     if(p1 != nullptr){
-        shared_ptr<Val> ret(new Sequ(v1->inject(p1->getr1(),c),v2));
+        shared_ptr<Val> ret(new Sequ(v1->inj(p1->getr1(),c),v2));
         return ret;
     }
     shared_ptr<STAR> p2 = dynamic_pointer_cast<STAR>(r);
@@ -147,7 +146,7 @@ shared_ptr<Val> Sequ::inject(shared_ptr<REGEX> r, char c) const{
         shared_ptr<Stars> p3 = dynamic_pointer_cast<Stars>(v2);
         (p3)?:throw LexingError("Sequ injection, not of type Stars (STAR) line 147 " + v2->str());
         vector<shared_ptr<Val>> newList = p3->getList();
-        newList.insert(newList.begin(),v1->inject(p2->getr(),c));
+        newList.insert(newList.begin(),v1->inj(p2->getr(),c));
         shared_ptr<Val> ret(new Stars(newList));
         return ret;
     } 
@@ -156,7 +155,7 @@ shared_ptr<Val> Sequ::inject(shared_ptr<REGEX> r, char c) const{
         shared_ptr<Stars> p5 = dynamic_pointer_cast<Stars>(v2);
         (p5)?:throw LexingError("Sequ injection, not of type Stars (PLUS) line 156 " + v2->str());
         vector<shared_ptr<Val>> newList = p5->getList();
-        newList.insert(newList.begin(),v1->inject(p4->getr(),c));
+        newList.insert(newList.begin(),v1->inj(p4->getr(),c));
         shared_ptr<Val> ret(new Plus(newList));
         return ret;
     } 
@@ -165,7 +164,7 @@ shared_ptr<Val> Sequ::inject(shared_ptr<REGEX> r, char c) const{
         shared_ptr<Ntimes> p7 = dynamic_pointer_cast<Ntimes>(v2);
         (p7)?:throw LexingError("Sequ injection, not of type Ntimes line 165 " + v2->str());
         vector<shared_ptr<Val>> newList = p7->getList();
-        newList.insert(newList.begin(),v1->inject(p6->getr(),c));
+        newList.insert(newList.begin(),v1->inj(p6->getr(),c));
         shared_ptr<Val> ret(new Ntimes(newList));
         return ret;
     }

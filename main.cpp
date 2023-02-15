@@ -76,7 +76,7 @@ int main(){
 
     shared_ptr<STAR> lang_regs = star(alt(comment,alt(string,keyword)));
 
-    auto ret = tokenise(lang_regs,"while");
+    auto ret = tokenise(lang_regs,"//this is a comment\nthen");
     printVector(ret);
 
     return 0;

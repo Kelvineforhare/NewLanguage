@@ -10,8 +10,9 @@ class LexingError : public std::exception
             msg = m;
         };
         const char *what(){
-            string message = "Lexing Error: " +  msg;
+            string message = string("Lexing Error: " +  msg);
             cout << message.c_str() << "\n";
-            return message.c_str();
+            const char * ret =  message.c_str();
+            return ret;
         }
 };
