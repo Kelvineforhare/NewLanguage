@@ -115,7 +115,7 @@ shared_ptr<REGEX> stringList2rexp(const vector<string> & s){
 
 //REGEX
 std::shared_ptr<Val> REGEX::mkeps() const{
-    throw LexingError();
+    throw LexingError("Regular expression not right class line 188");
 }
 
 
