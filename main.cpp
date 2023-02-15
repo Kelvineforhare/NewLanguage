@@ -5,7 +5,16 @@
 
 std::ostream& operator<<(std::ostream& os,  std::pair<string,string> const& p)
 {
-    os << "(" << p.first << "," << p.second << ")";
+    os << "(" << p.first << ","  ;
+    for (int i = 0 ; i < p.second.length() ; i++ ){
+        if(p.second[i] == '\n'){
+            cout<<"\\n";
+        }
+        else{
+            cout << p.second[i];
+        }
+    }
+    os << ")";
     return os;
 }
 
@@ -23,7 +32,7 @@ std::shared_ptr<Val> lex(std::shared_ptr<REGEX> r,string s, int i){
     std::shared_ptr<Val> val = nullptr;
     try {
         val = lex(reg,s,i)->inj(r,s[i-1]);
-        cout << val->str() << "\n";
+        //cout << val->str() << "\n";
     }
     catch(LexingError &e){
         cout << e.what() <<"\n";
@@ -76,7 +85,7 @@ int main(){
 
     shared_ptr<STAR> lang_regs = star(alt(comment,alt(string,keyword)));
 
-    auto ret = tokenise(lang_regs,"//this is a comment\nthen");
+    auto ret = tokenise(lang_regs,"//this is a comment\nthenwhilefor");
     printVector(ret);
 
     return 0;
