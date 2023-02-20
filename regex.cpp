@@ -122,7 +122,7 @@ shared_ptr<Val> F_ID(shared_ptr<Val> v){
 Function F_RIGHT(Function f) {
    
    auto ret = [f](shared_ptr<Val> v) -> shared_ptr<Val>{
-    //cout << v->str() <<"F_RIGHT \n";
+    cout << v->str() <<"F_RIGHT \n";
     return shared_ptr<Val>(new Right(f(v)));
     };
    return ret;
@@ -130,7 +130,7 @@ Function F_RIGHT(Function f) {
 
 Function F_LEFT(Function f) {
    auto ret = [f](shared_ptr<Val> v) -> shared_ptr<Val>{
-    //cout << v->str() <<"F_LEFT \n";
+    cout << v->str() <<"F_LEFT \n";
     return shared_ptr<Val>(new Left(f(v)));
     };
    return ret;
@@ -138,15 +138,18 @@ Function F_LEFT(Function f) {
 
 Function F_ALT(Function f1, Function f2){
     auto ret = [f1,f2](shared_ptr<Val> v) -> shared_ptr<Val>{
-        //cout << v->str() <<"F_ALT \n";
+        cout << v->str() << " F_ALT \n";
         shared_ptr<Right> p1 = dynamic_pointer_cast<Right>(v);
         if(p1 != nullptr){
             return shared_ptr<Val>(new Right(f2(p1->getV())));
         }
         shared_ptr<Left> p2 = dynamic_pointer_cast<Left>(v);
-        if(p1 != nullptr){
-            return shared_ptr<Val>(new Left(f2(p2->getV())));
+        if(p2 != nullptr){
+            shared_ptr<Val> ans(new Left(f1(p2->getV())));
+            cout << ans->str() << "\n";
+            return ans;
         }
+        cout << "??\n";
         return v;
     };
     return ret;
@@ -158,7 +161,7 @@ shared_ptr<Val> F_ERROR(shared_ptr<Val> v = shared_ptr<Val>(new Empty())){
 
 Function F_SEQ_Empty1(Function f1,Function f2) {
     auto ret =[f1,f2](shared_ptr<Val> v) -> shared_ptr<Val>{
-        //cout << v->str() <<"F_SEQ_Empty1 \n";
+        cout << v->str() <<"F_SEQ_Empty1 \n";
         shared_ptr<Val> empty(new Empty());
         return shared_ptr<Val>(new Sequ(f1(empty),f2(v)));
     };
@@ -168,6 +171,7 @@ Function F_SEQ_Empty1(Function f1,Function f2) {
 
 Function F_SEQ_Empty2(Function f1, Function f2) {
     auto ret =[f1,f2](shared_ptr<Val> v) -> shared_ptr<Val>{
+        cout << v->str() <<"F_SEQ_Empty2 \n";
         shared_ptr<Val> empty(new Empty());
         return shared_ptr<Val>(new Sequ(f1(v),f2(empty)));
     };
@@ -176,6 +180,7 @@ Function F_SEQ_Empty2(Function f1, Function f2) {
 
 Function F_SEQ(Function f1, Function f2){
     auto ret =[f1,f2](shared_ptr<Val> v) -> shared_ptr<Val>{
+        cout << v->str() <<"F_SEQ \n";
         shared_ptr<Sequ> p = dynamic_pointer_cast<Sequ>(v);
         if(p != nullptr){
              return shared_ptr<Val>(new Sequ(f1(p->getr1()),f2(p->getr2())));
