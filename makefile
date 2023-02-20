@@ -1,3 +1,6 @@
+lexerDebug: regex.o value.o main.o
+	g++ -std=c++11 -g regex.o value.o main.o -o lexerDebug
+
 lexer: regex.o value.o main.o
 	g++ -std=c++11 regex.o value.o main.o -o lexer
 

@@ -65,6 +65,7 @@ class Left : public Val{
         std::shared_ptr<Val> inject(std::shared_ptr<REGEX> r, char c) const override;
         vector<pair<string,string>> env()const override;
         std::string flatten()const override;
+        std::shared_ptr<Val> getV();
 };
 
 
@@ -78,6 +79,7 @@ class Right : public Val{
         std::shared_ptr<Val> inject(std::shared_ptr<REGEX> r,char c) const override;
         vector<pair<string,string>> env()const override;
         std::string flatten()const override;
+        std::shared_ptr<Val> getV();
 };
 
 

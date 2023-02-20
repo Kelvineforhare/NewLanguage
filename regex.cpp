@@ -66,24 +66,24 @@ shared_ptr<REGEX> der(char c,shared_ptr<REGEX> r){
     return r->der(c);
 }
 
-shared_ptr<REGEX> ders(const vector<char> & str, shared_ptr<REGEX> r){
-    int i = 0;
-    if(i >= str.size()){
-        return r;
-    }
-    shared_ptr<REGEX> s = der(str[i],r)->simp();
-    ++i;
-    for(;i < str.size();++i){
-        s = der(str[i],s)->simp();
-    }
-    return s;
-}
+// shared_ptr<REGEX> ders(const vector<char> & str, shared_ptr<REGEX> r){
+//     int i = 0;
+//     if(i >= str.size()){
+//         return r;
+//     }
+//     shared_ptr<REGEX> s = der(str[i],r)->simp();
+//     ++i;
+//     for(;i < str.size();++i){
+//         s = der(str[i],s)->simp();
+//     }
+//     return s;
+// }
 
-bool matcher(shared_ptr<REGEX> r,const string & s)
-{
-    vector<char> v(s.begin(), s.end());
-    return ders(v,r)->nullable();
-}
+// bool matcher(shared_ptr<REGEX> r,const string & s)
+// {
+//     vector<char> v(s.begin(), s.end());
+//     return ders(v,r)->nullable();
+// }
 
 shared_ptr<REGEX> string2rexp(const string & s){
   if(s.size() == 0){
@@ -113,8 +113,80 @@ shared_ptr<REGEX> stringList2rexp(const vector<string> & s){
   return ret;
 }
 
+
+shared_ptr<Val> F_ID(shared_ptr<Val> v){
+    //cout << v->str() <<"F_ID \n";
+    return v;
+}
+
+Function F_RIGHT(Function f) {
+   
+   auto ret = [f](shared_ptr<Val> v) -> shared_ptr<Val>{
+    //cout << v->str() <<"F_RIGHT \n";
+    return shared_ptr<Val>(new Right(f(v)));
+    };
+   return ret;
+}
+
+Function F_LEFT(Function f) {
+   auto ret = [f](shared_ptr<Val> v) -> shared_ptr<Val>{
+    //cout << v->str() <<"F_LEFT \n";
+    return shared_ptr<Val>(new Left(f(v)));
+    };
+   return ret;
+}
+
+Function F_ALT(Function f1, Function f2){
+    auto ret = [f1,f2](shared_ptr<Val> v) -> shared_ptr<Val>{
+        //cout << v->str() <<"F_ALT \n";
+        shared_ptr<Right> p1 = dynamic_pointer_cast<Right>(v);
+        if(p1 != nullptr){
+            return shared_ptr<Val>(new Right(f2(p1->getV())));
+        }
+        shared_ptr<Left> p2 = dynamic_pointer_cast<Left>(v);
+        if(p1 != nullptr){
+            return shared_ptr<Val>(new Left(f2(p2->getV())));
+        }
+        return v;
+    };
+    return ret;
+}
+
+shared_ptr<Val> F_ERROR(shared_ptr<Val> v = shared_ptr<Val>(new Empty())){
+    throw LexingError("Line 143 regular expression doesnt match");
+}
+
+Function F_SEQ_Empty1(Function f1,Function f2) {
+    auto ret =[f1,f2](shared_ptr<Val> v) -> shared_ptr<Val>{
+        //cout << v->str() <<"F_SEQ_Empty1 \n";
+        shared_ptr<Val> empty(new Empty());
+        return shared_ptr<Val>(new Sequ(f1(empty),f2(v)));
+    };
+    return ret;
+}
+
+
+Function F_SEQ_Empty2(Function f1, Function f2) {
+    auto ret =[f1,f2](shared_ptr<Val> v) -> shared_ptr<Val>{
+        shared_ptr<Val> empty(new Empty());
+        return shared_ptr<Val>(new Sequ(f1(v),f2(empty)));
+    };
+    return ret;
+}
+
+Function F_SEQ(Function f1, Function f2){
+    auto ret =[f1,f2](shared_ptr<Val> v) -> shared_ptr<Val>{
+        shared_ptr<Sequ> p = dynamic_pointer_cast<Sequ>(v);
+        if(p != nullptr){
+             return shared_ptr<Val>(new Sequ(f1(p->getr1()),f2(p->getr2())));
+        }
+       return v;
+    };
+    return ret;
+}
+
 //REGEX
-std::shared_ptr<Val> REGEX::mkeps() const{
+shared_ptr<Val> REGEX::mkeps() const{
     throw LexingError("Regular expression not right class line 188");
 }
 
@@ -133,8 +205,9 @@ string ZERO::str() const {
     return "ZERO";
 }
 
-shared_ptr<REGEX> ZERO::simp() {
-    return {zero()};
+pair<shared_ptr<REGEX>,Function> ZERO::simp() {
+    pair<shared_ptr<REGEX>,Function> ret{zero(),F_ID};
+    return ret;
 }
 
 bool ZERO::isZero() const {return true;}
@@ -154,8 +227,10 @@ string ONE::str() const{
     return "ONE";
 }
 
-shared_ptr<REGEX> ONE::simp(){
-    return {one()};
+
+pair<shared_ptr<REGEX>,Function> ONE::simp() {
+    pair<shared_ptr<REGEX>,Function> ret{one(),F_ID};
+    return ret;
 }
 
 bool ONE::isOne()const {return true;}
@@ -184,8 +259,9 @@ string CHAR::str() const{
     return s;
 }
 
-shared_ptr<REGEX> CHAR::simp() {
-    return {cha(c)};
+pair<shared_ptr<REGEX>,Function> CHAR::simp() {
+    pair<shared_ptr<REGEX>,Function> ret{cha(c),F_ID};
+    return ret;
 }
 
 
@@ -203,20 +279,20 @@ string ALT::str() const{
     return "(" + r1->str() + " || " + r2->str() + ")";
 }
 
-shared_ptr<REGEX> ALT::simp() {
-    shared_ptr<REGEX> n1 = r1->simp();
-    shared_ptr<REGEX> n2 = r2->simp();
+pair<shared_ptr<REGEX>,Function> ALT::simp() {
+    pair<shared_ptr<REGEX>,Function> n1 = r1->simp();
+    pair<shared_ptr<REGEX>,Function> n2 = r2->simp();
     
-    if(n1->isZero()){
-        return n2;
+    if(n1.first->isZero()){
+        return  pair<shared_ptr<REGEX>,Function>{n2.first,F_RIGHT(n2.second)};
     }
-    if(n2->isZero()){
-        return n1;                                          
+    if(n2.first->isZero()){
+        return pair<shared_ptr<REGEX>,Function>{n1.first,F_LEFT(n1.second)};                                          
     }
-    if(n1 == n2){
-        return n1;
+    if(n1.first == n2.first){
+        return pair<shared_ptr<REGEX>,Function>{n1.first,F_LEFT(n1.second)};
     }
-    return alt(n1,n2);
+    return pair<shared_ptr<REGEX>,Function>{alt(n1.first,n2.first),F_ALT(n1.second,n2.second)};
 }
 
 shared_ptr<Val> ALT::mkeps() const {
@@ -257,21 +333,22 @@ string SEQ::str() const{
     return "(" +  r1->str() + " && " + r2->str() + ")";
 }
 
-shared_ptr<REGEX> SEQ::simp() {
-    shared_ptr<REGEX> n1 = r1->simp();
-    shared_ptr<REGEX> n2 = r2->simp();
+pair<shared_ptr<REGEX>,Function>  SEQ::simp() {
+    // cout << r1->str() << " test\n";
+    // cout << r2->str() << " test\n";
+    pair<shared_ptr<REGEX>,Function> n1 = r1->simp();
+    pair<shared_ptr<REGEX>,Function> n2 = r2->simp();
 
-    if(n1->isZero() || n2->isZero()){
-        
-        return zero();
+    if(n1.first->isZero() || n2.first->isZero()){
+        return pair<shared_ptr<REGEX>,Function>(zero(),F_ERROR);
     }
-    if(n1->isOne()){
-        return n2;
+    if(n1.first->isOne()){
+        return pair<shared_ptr<REGEX>,Function>(n2.first,F_SEQ_Empty1(n1.second,n2.second));
     }
-    if(n2->isOne()){
-        return n1;
+    if(n2.first->isOne()){
+        return pair<shared_ptr<REGEX>,Function>(n1.first,F_SEQ_Empty2(n1.second,n2.second));
     }
-    return seq((n1),(n2)); 
+    return pair<shared_ptr<REGEX>,Function>(seq(n1.first,n2.first),F_SEQ(n1.second,n2.second)); 
 }
 
 shared_ptr<Val> SEQ::mkeps() const {
@@ -304,8 +381,9 @@ string STAR::str() const{
     return r1->str() + "*";
 }
 
-shared_ptr<REGEX> STAR::simp(){
-    return star((r1));
+pair<shared_ptr<REGEX>,Function> STAR::simp(){
+    pair<shared_ptr<REGEX>,Function> ret{star((r1)),F_ID};
+    return ret;
 }
 
 shared_ptr<Val> STAR::mkeps() const {
@@ -332,8 +410,9 @@ string PLUS::str() const {
     return r1->str() + "+";
 }
 
-shared_ptr<REGEX> PLUS::simp(){
-    return {plus(r1)};
+pair<shared_ptr<REGEX>,Function> PLUS::simp(){
+     pair<shared_ptr<REGEX>,Function> ret{plus(r1),F_ID};
+    return ret;
 }
 
 shared_ptr<Val> PLUS::mkeps() const {
@@ -363,8 +442,9 @@ string NTIMES::str() const {
     return r1->str() + "{" + std::to_string(i) + "}";
 }  
 
-shared_ptr<REGEX> NTIMES::simp(){
-    return ntimes(r1,i);
+pair<shared_ptr<REGEX>,Function> NTIMES::simp(){
+    pair<shared_ptr<REGEX>,Function> ret{ntimes(r1,i),F_ID};
+    return ret;
 }   
 
 shared_ptr<Val> NTIMES::mkeps() const {
@@ -403,8 +483,9 @@ string RANGE::str() const {
     return r;
 }
 
-shared_ptr<REGEX> RANGE::simp() {
-    return range(s);
+pair<shared_ptr<REGEX>,Function> RANGE::simp() {
+    pair<shared_ptr<REGEX>,Function> ret{range(s),F_ID};
+    return ret;
 }
 
 
@@ -422,8 +503,9 @@ string ID::str() const {
     return s + ": (" + r1->str() + ")";
 }     
 
-shared_ptr<REGEX> ID::simp()  {
-    return {id(s,r1)};
+pair<shared_ptr<REGEX>,Function> ID::simp()  {
+    pair<shared_ptr<REGEX>,Function> ret{id(s,r1),F_ID};
+    return ret;
 }
 
 shared_ptr<Val> ID::mkeps() const {

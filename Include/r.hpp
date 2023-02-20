@@ -6,6 +6,7 @@
 #include <memory>
 #include <set>
 #include <iostream>
+#include <functional>
 
 
 using std::cout;
@@ -16,9 +17,12 @@ using std::unique_ptr;
 using std::shared_ptr;
 using std::move;
 
-
 class Val;
 class LexingError;
+
+typedef std::function<std::shared_ptr<Val> ( std::shared_ptr<Val> ) > Function;
+
+
 
 
 class REGEX{
@@ -33,7 +37,7 @@ class REGEX{
         virtual bool nullable() const = 0;
         virtual std::shared_ptr<REGEX> der(char c) = 0;
         virtual std::string str() const = 0;
-        virtual std::shared_ptr<REGEX> simp() = 0;
+        virtual std::pair<std::shared_ptr<REGEX>,Function> simp() = 0;
         virtual bool isZero() const {return false;}
         virtual bool isOne() const {return false;}
         virtual std::shared_ptr<Val> mkeps() const;
@@ -44,7 +48,7 @@ public:
     bool nullable() const override;
     std::shared_ptr<REGEX> der(char c) override;
     std::string str() const override;
-    std::shared_ptr<REGEX> simp() override;
+    std::pair<std::shared_ptr<REGEX>,Function> simp() override;
     bool isZero() const override;
 };
 
@@ -53,7 +57,7 @@ public:
     bool nullable() const override;
     std::shared_ptr<REGEX> der(char c) override;
     std::string str() const override;
-    std::shared_ptr<REGEX> simp() override;
+    std::pair<std::shared_ptr<REGEX>,Function> simp() override;
     bool isOne() const override;
     std::shared_ptr<Val> mkeps() const override;
 };
@@ -68,7 +72,7 @@ public:
     bool nullable() const override;
     std::shared_ptr<REGEX> der(char d) override;
     std::string str() const override;
-    std::shared_ptr<REGEX> simp() override;
+    std::pair<std::shared_ptr<REGEX>,Function> simp() override;
 };
 
 class ALT : public REGEX {
@@ -80,7 +84,7 @@ class ALT : public REGEX {
         bool nullable() const override;
         std::shared_ptr<REGEX> der(char c) override;
         std::string str() const override;
-        std::shared_ptr<REGEX> simp() override;
+        std::pair<std::shared_ptr<REGEX>,Function> simp() override;
         std::shared_ptr<Val> mkeps() const override;
         std::shared_ptr<REGEX> getr1();
         std::shared_ptr<REGEX> getr2();
@@ -95,7 +99,7 @@ class SEQ : public REGEX {
         bool nullable() const override;
         std::shared_ptr<REGEX> der(char c) override;
         std::string str() const override;
-        std::shared_ptr<REGEX> simp() override;
+        std::pair<std::shared_ptr<REGEX>,Function> simp() override;
         std::shared_ptr<Val> mkeps() const override;
         std::shared_ptr<REGEX> getr1();
         std::shared_ptr<REGEX> getr2();
@@ -109,7 +113,7 @@ class STAR : public REGEX {
         bool nullable() const override;
         std::shared_ptr<REGEX> der(char c) override;
         std::string str() const override;
-        std::shared_ptr<REGEX> simp() override;
+        std::pair<std::shared_ptr<REGEX>,Function> simp() override;
         std::shared_ptr<Val> mkeps() const override; 
         std::shared_ptr<REGEX> getr() const;
 };
@@ -122,7 +126,7 @@ class PLUS : public REGEX {
         bool nullable() const override;
         std::shared_ptr<REGEX> der(char c) override;
         std::string str() const override;
-        std::shared_ptr<REGEX> simp() override;
+        std::pair<std::shared_ptr<REGEX>,Function> simp() override;
         std::shared_ptr<Val> mkeps() const override;
         std::shared_ptr<REGEX> getr() const;
 };
@@ -136,7 +140,7 @@ class NTIMES : public REGEX {
         bool nullable() const override;
         std::shared_ptr<REGEX> der(char c) override;
         std::string str() const override;
-        std::shared_ptr<REGEX> simp() override;
+        std::pair<std::shared_ptr<REGEX>,Function> simp() override;
         std::shared_ptr<Val> mkeps() const override;
         std::shared_ptr<REGEX> getr() const;
 };
@@ -151,7 +155,7 @@ public:
     bool nullable() const override;
     std::shared_ptr<REGEX> der(char d) override;
     std::string str() const override;
-    std::shared_ptr<REGEX> simp() override;
+    std::pair<std::shared_ptr<REGEX>,Function> simp() override;
 };
 
 class ID : public REGEX {
@@ -163,7 +167,7 @@ class ID : public REGEX {
         bool nullable() const override;
         std::shared_ptr<REGEX> der(char c) override;
         std::string str() const override;
-        std::shared_ptr<REGEX> simp() override;
+        std::pair<std::shared_ptr<REGEX>,Function> simp() override;
         std::shared_ptr<Val> mkeps() const override;
         std::string getStr() const;
         std::shared_ptr<REGEX> getr() const;
@@ -180,8 +184,8 @@ std::shared_ptr<NTIMES> ntimes(std::shared_ptr<REGEX> r1, int i);
 std::shared_ptr<RANGE> range(set<char> s);
 std::shared_ptr<ID> id(string str,std::shared_ptr<REGEX> r1);
 shared_ptr<REGEX> der(char c,shared_ptr<REGEX> r);
-shared_ptr<REGEX> ders(const vector<char> & str, shared_ptr<REGEX> r);
-bool matcher(shared_ptr<REGEX> r,const string & s);
+//shared_ptr<REGEX> ders(const vector<char> & str, shared_ptr<REGEX> r);
+//bool matcher(shared_ptr<REGEX> r,const string & s);
 shared_ptr<REGEX> string2rexp(const string & s);
 shared_ptr<REGEX> stringList2rexp(const vector<string> & s);
 

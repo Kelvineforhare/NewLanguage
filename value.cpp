@@ -90,6 +90,11 @@ string Left::flatten()const{
     return v->flatten();
 }
 
+std::shared_ptr<Val> Left::getV(){
+    return v;
+}
+
+
 
 //Right
 string Right::str()const{
@@ -122,6 +127,11 @@ vector<pair<string,string>> Right::env()const{
 string Right::flatten()const{
     return v->flatten();
 }
+
+std::shared_ptr<Val> Right::getV(){
+    return v;
+}
+
 
 
 

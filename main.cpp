@@ -26,13 +26,17 @@ std::shared_ptr<Val> lex(std::shared_ptr<REGEX> r,string s, int i){
         std::shared_ptr<Val> ret = r->mkeps();
         return ret;
     }
-    //lex(der(s[i],r)->simp(),s,++i)->inj(r,s[i]);
-    shared_ptr<REGEX> reg = der(s[i],r);
+    auto reg = der(s[i],r)->simp();
     ++i;
     std::shared_ptr<Val> val = nullptr;
     try {
-        val = lex(reg,s,i)->inj(r,s[i-1]);
-        //cout << val->str() << "\n";
+        val = lex(reg.first,s,i);
+        cout << val->str() << " before rec\n";
+        val = reg.second(val);
+        cout << "reg exp: " << r->str() << " value: " << val->str() << " after rec\n";
+
+        val = val->inj(r,s[i-1]);
+        cout << val->str() << " inj\n";
     }
     catch(LexingError &e){
         cout << e.what() <<"\n";
@@ -52,41 +56,43 @@ void printVector(vector<pair<string,string>> vec){
     cout << "\n";
 }
 
-// int main()
-// {
-//     string digitstr = "0123456789";
-//     shared_ptr<REGEX> digit = id("numbers",star(range(set<char>(begin(digitstr), end(digitstr)))));
-//     auto ret = tokenise(digit,"079");
-//     printVector(ret);
-   
-   
-// }
+int main()
+{
+    // string digitstr = "0123456789";
+    shared_ptr<REGEX> r = id("test",alt(alt(star(cha('a')),cha('a')),cha('a')));
 
-int main(){
-    string digitstr = "0123456789";
-    string digitstr1 = "123456789";
-    string characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-    string sym = "._><=;,\':";
-    vector<string>{"while","if","then","else","do","for","to","true","false","read","write","skip"};
-
-    shared_ptr<RANGE> digit = range(set<char>(begin(digitstr), end(digitstr)));
-    shared_ptr<RANGE> digit1 = range(set<char>(begin(digitstr1), end(digitstr1)));
-    shared_ptr<ALT> num = alt(digit,seq(digit1,star(digit)));
-
-    shared_ptr<ALT> whitespaces = alt(alt(alt(cha('\n'),cha('\t')),cha('\r')),cha(' '));
-    shared_ptr<ALT> spaces = alt(alt(cha('\n'),cha('\t')),cha('\r'));
-
-    shared_ptr<RANGE> letters = range(set<char> (begin(characters), end(characters)));
-    shared_ptr<ALT> symbols =  alt(letters,range(set<char> (begin(sym), end(sym))));
-
-    shared_ptr<ID> keyword = id("key",stringList2rexp(vector<string>{"while","if","then","else","do","for","to","true","false","read","write","skip"}));
-    shared_ptr<ID> comment = id("com",seq(seq(seq(cha('/'),cha('/')),star(alt(alt(symbols,digit),cha(' ')))),spaces)); 
-    shared_ptr<ID> string = id("str",seq(seq(cha('\"'),star(alt(alt(symbols,whitespaces),digit))),cha('\"')));
-
-    shared_ptr<STAR> lang_regs = star(alt(comment,alt(string,keyword)));
-
-    auto ret = tokenise(lang_regs,"//this is a comment\nthenwhilefor");
+    // auto ret2 = tokenise2(r,"aa");
+    // printVector(ret2);
+    auto ret = tokenise(r,"aa");
     printVector(ret);
-
-    return 0;
+   
 }
+
+//int main(){
+//     string digitstr = "0123456789";
+//     string digitstr1 = "123456789";
+//     string characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+//     string sym = "._><=;,\':";
+//     vector<string>{"while","if","then","else","do","for","to","true","false","read","write","skip"};
+
+//     shared_ptr<RANGE> digit = range(set<char>(begin(digitstr), end(digitstr)));
+//     shared_ptr<RANGE> digit1 = range(set<char>(begin(digitstr1), end(digitstr1)));
+//     shared_ptr<ALT> num = alt(digit,seq(digit1,star(digit)));
+
+//     shared_ptr<ALT> whitespaces = alt(alt(alt(cha('\n'),cha('\t')),cha('\r')),cha(' '));
+//     shared_ptr<ALT> spaces = alt(alt(cha('\n'),cha('\t')),cha('\r'));
+
+//     shared_ptr<RANGE> letters = range(set<char> (begin(characters), end(characters)));
+//     shared_ptr<ALT> symbols =  alt(letters,range(set<char> (begin(sym), end(sym))));
+
+//     shared_ptr<ID> keyword = id("key",stringList2rexp(vector<string>{"while","if","then","else","do","for","to","true","false","read","write","skip"}));
+//     shared_ptr<ID> comment = id("com",seq(seq(seq(cha('/'),cha('/')),star(alt(alt(symbols,digit),cha(' ')))),spaces)); 
+//     shared_ptr<ID> string = id("str",seq(seq(cha('\"'),star(alt(alt(symbols,whitespaces),digit))),cha('\"')));
+
+//     shared_ptr<STAR> lang_regs = star(alt(comment,alt(string,keyword)));
+
+//     auto ret = tokenise(lang_regs,"//this is a comment\nthenwhilefor");
+//     printVector(ret);
+
+//     return 0;
+// }

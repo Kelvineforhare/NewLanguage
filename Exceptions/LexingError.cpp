@@ -11,7 +11,7 @@ class LexingError : public std::exception
         };
         const char *what(){
             string message = string("Lexing Error: " +  msg);
-            cout << message.c_str() << "\n";
+            //cout << message.c_str() << "\n";
             const char * ret =  message.c_str();
             return ret;
         }
