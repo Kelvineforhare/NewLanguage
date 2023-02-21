@@ -1,5 +1,5 @@
-#include "Include/r.hpp"
-#include "Include/v.hpp"
+#include "Include/regex.hpp"
+#include "Include/value.hpp"
 #include "Exceptions/LexingError.cpp"
 
 //Val
