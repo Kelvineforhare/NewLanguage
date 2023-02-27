@@ -160,27 +160,27 @@ void printTokVector(vector<shared_ptr<Token>> vec){
 //     return 0;
 // }
 
-// int main(){
-//     shared_ptr<Token> token(new T_KWD("for"));
-//     shared_ptr<Token> token2(new T_KWD("while"));
+int main(){
+    shared_ptr<Token> token(new T_KWD("for"));
+    shared_ptr<Token> token2(new T_KWD("while"));
 
-//     shared_ptr<Token> token3(new T_KWD("for"));
-//     shared_ptr<Token> token4(new T_KWD("while"));
+    shared_ptr<Token> token3(new T_KWD("for"));
+    shared_ptr<Token> token4(new T_KWD("while"));
 
-//     TokenParser tok =  TokenParser(token);
-//     TokenParser tok2 =  TokenParser(token2);
-//     auto tokseq =  MapParser<shared_ptr<Token>,int>(tok,test);
+    TokenParser tok =  TokenParser(token);
+    TokenParser tok2 =  TokenParser(token2);
+    auto tokseq =  MapParser<shared_ptr<Token>,int>(tok,test);
     
-//     vector<shared_ptr<Token>> list;
-//     list.push_back(token3);
+    vector<shared_ptr<Token>> list;
+    list.push_back(token3);
 
-//     auto output = tokseq.parse(list);
-//     auto it = output.begin();
-//     if(it != output.end()){
-//         cout << *it << "\n"; 
-//     }
-//     return 0;
-// }
+    auto output = tokseq.parse(list);
+    auto it = output.begin();
+    if(it != output.end()){
+        cout << *it << "\n"; 
+    }
+    return 0;
+}
 
 int test(shared_ptr<Token> test){
     return 10;
