@@ -1,13 +1,13 @@
 all: lexerDebug lexer
 
-lexerDebug: regex.o value.o main.o
-	g++ -std=c++11 -g regex.o value.o main.o -o lexerDebug
+lexerDebug: regex.o value.o token.o
+	g++ -std=c++11 -g regex.o value.o token.o -o lexerDebug
 
-lexer: regex.o value.o main.o
-	g++ -std=c++11 regex.o value.o main.o -o lexer
+lexer: regex.o value.o token.o
+	g++ -std=c++11 regex.o value.o token.o -o lexer
 
-main.o: main.cpp
-	g++ -std=c++11 -g -c main.cpp 
+token.o: token.cpp
+	g++ -std=c++11 -g -c token.cpp 
 
 value.o: value.cpp
 	g++ -std=c++11 -g -c value.cpp 
