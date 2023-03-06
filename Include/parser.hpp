@@ -11,6 +11,7 @@ using std::shared_ptr;
 using std::function;
 
 class Token;
+class T_INT;
 bool operator==(shared_ptr<Token> a,shared_ptr<Token> b);
 
 
@@ -117,6 +118,49 @@ class MapParser : public Parser<S>{
                 result.insert(value);
             }
             return result;
+        }
+};
+
+
+class IntParser : public Parser<int>{
+    public:
+        set<pair<int,vector<shared_ptr<Token>>>> parse(vector<shared_ptr<Token>> in) override{
+            if(in.size() == 0){
+                return set<pair<int,vector<shared_ptr<Token>>>>();
+            }
+            shared_ptr<T_INT> input = dynamic_pointer_cast<T_INT>(in[0]);
+            if(input != nullptr){
+                vector<shared_ptr<Token>> ret(in.begin()+1,in.end());
+                return set<pair<int,vector<shared_ptr<Token>>>>{pair<int,vector<shared_ptr<Token>>>(input->getInt(),ret)};
+            }
+            return set<pair<int,vector<shared_ptr<Token>>>>();
+        }
+};
+
+class TeParser : public Parser<int>{
+    public:
+        set<pair<int,vector<shared_ptr<Token>>>> parse(vector<shared_ptr<Token>> in) override{
+            IntParser parser;
+            return parser.parse(in);
+        }
+};
+
+class AExpParser : public  SeqParser<int,shared_ptr<Token>>{
+    private:
+        TeParser parse1;
+        TokenParser parse2= TokenParser(shared_ptr<Token>(new T_OP("+"))); 
+        // shared_ptr<AExpParser> parse3;
+    public:
+
+        AExpParser(): SeqParser(parse1,parse2){
+        }
+
+
+        set<pair<pair<int,shared_ptr<Token>>,vector<shared_ptr<Token>>>> parse(vector<shared_ptr<Token>> in) override{
+           //AExpParser parse3;
+           auto se = SeqParser<int,shared_ptr<Token>>(parse1,parse2);
+           return se.parse(in);
+           //auto se1 = SeqParser<pair<int,shared_ptr<Token>>,AExpParser>(se,parse3)
         }
 };
 

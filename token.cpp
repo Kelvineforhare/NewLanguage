@@ -2,6 +2,7 @@
 #include "Include/value.hpp"
 #include "Include/token.hpp"
 #include "Include/parser.hpp"
+#include "Include/syntaxTree.hpp"
 #include "Exceptions/LexingError.cpp"
 #include <cstdlib>
 
@@ -40,6 +41,18 @@ std::ostream& operator<<(std::ostream& os,  std::pair<pair<shared_ptr<Token>,sha
     os << ")";
     return os;
 }
+
+std::ostream& operator<<(std::ostream& os,  std::pair<pair<int,shared_ptr<Token>>,vector<shared_ptr<Token>>> const& p)
+{
+    os << "(" << p.first.first << " , "  ;
+    os << p.first.second->toString() << " : "  ;
+    for (int i = 0 ; i < p.second.size() ; i++ ){
+        cout << p.second[i]->toString() << ", ";
+    }
+    os << ")";
+    return os;
+}
+
 
 std::ostream& operator<<(std::ostream& os,  std::pair<int,vector<shared_ptr<Token>>> const& p)
 {
@@ -160,41 +173,47 @@ void printTokVector(vector<shared_ptr<Token>> vec){
 //     return 0;
 // }
 
-int main(){
-    shared_ptr<Token> token(new T_KWD("for"));
-    shared_ptr<Token> token2(new T_KWD("while"));
-
-    shared_ptr<Token> token3(new T_KWD("for"));
-    shared_ptr<Token> token4(new T_KWD("while"));
-
-    TokenParser tok =  TokenParser(token);
-    TokenParser tok2 =  TokenParser(token2);
-    auto tokseq =  MapParser<shared_ptr<Token>,int>(tok,test);
-    
-    vector<shared_ptr<Token>> list;
-    list.push_back(token3);
-
-    auto output = tokseq.parse(list);
-    auto it = output.begin();
-    if(it != output.end()){
-        cout << *it << "\n"; 
-    }
-    return 0;
-}
 
 int test(shared_ptr<Token> test){
     return 10;
 }
 
-struct Te{
-    shared_ptr<Token> token = shared_ptr<Token>(new T_OP("*"));
-};
+// int main(){
+//     shared_ptr<Token> token(new T_KWD("for"));
+//     shared_ptr<Token> token2(new T_KWD("while"));
 
-struct AExp{
-    Te parser;
-    shared_ptr<Token> token = shared_ptr<Token>(new T_OP("+"));
-    shared_ptr<AExp>  e;
-};
+//     shared_ptr<Token> token3(new T_KWD("for"));
+//     shared_ptr<Token> token4(new T_KWD("while"));
+
+//     TokenParser tok =  TokenParser(token);
+//     TokenParser tok2 =  TokenParser(token2);
+//     auto tokseq =  MapParser<shared_ptr<Token>,int>(tok,test);
+    
+//     vector<shared_ptr<Token>> list;
+//     list.push_back(token3);
+
+//     auto output = tokseq.parse(list);
+//     auto it = output.begin();
+//     if(it != output.end()){
+//         cout << *it << "\n"; 
+//     }
+//     return 0;
+// }
+
+int main(){
+    shared_ptr<Token> token(new T_INT(1));
+    shared_ptr<Token> token2(new T_OP("+"));
+    vector<shared_ptr<Token>> list;
+    list.push_back(token);
+    list.push_back(token2);
+    AExpParser parser;
+    auto output = parser.parse(list);
+    auto it = output.begin();
+    if(it != output.end()){
+        cout << *it << "\n"; 
+    }
+}
+
 
 
 
