@@ -138,37 +138,37 @@ class IntParser : public Parser<int>{
         }
 };
 
-class TeParser : public Parser<int>{
-    public:
-        set<pair<int,vector<shared_ptr<Token>>>> parse(vector<shared_ptr<Token>> in) override{
-            IntParser parser;
-            return parser.parse(in);
-        }
-};
-
-shared_ptr<AExp> test(pair<int,shared_ptr<Token>> input){
-    shared_ptr<AExp> ret1(new Int(input.first));
-    shared_ptr<AExp> ret(new Aop("+",ret1,ret1));
+shared_ptr<AExp> intToAExp(int i){
+    shared_ptr<AExp> ret(new Int(i));
     return ret;
 }
 
-class AExpParser : public  MapParser<pair<int,shared_ptr<Token>>,shared_ptr<AExp>>{
+class TeParser : public Parser<shared_ptr<AExp>>{
+    public:
+        set<pair<shared_ptr<AExp>,vector<shared_ptr<Token>>>> parse(vector<shared_ptr<Token>> in) override{
+            IntParser parser;
+            auto mp = MapParser<int,shared_ptr<AExp>>(parser,intToAExp);
+            return mp.parse(in);
+        }
+};
+
+shared_ptr<AExp> test(pair<shared_ptr<AExp>,shared_ptr<Token>> input){
+    shared_ptr<AExp> ret(new Aop("+",input.first,input.first));
+    return ret;
+}
+
+class AExpParser : public  Parser<shared_ptr<AExp>>{
     private:
         TeParser parse1;
         TokenParser parse2= TokenParser(shared_ptr<Token>(new T_OP("+"))); 
-        SeqParser<int,shared_ptr<Token>> se = SeqParser<int,shared_ptr<Token>>(parse1,parse2);
-        // shared_ptr<AExpParser> parse3;
+        SeqParser<shared_ptr<AExp>,shared_ptr<Token>> se = SeqParser<shared_ptr<AExp>,shared_ptr<Token>>(parse1,parse2);
     public:
-
-        AExpParser(): MapParser(se,test){
-        }
-
 
         set<pair<shared_ptr<AExp>,vector<shared_ptr<Token>>>> parse(vector<shared_ptr<Token>> in) override{
            //AExpParser parse3;
-           
-           auto mp = MapParser<pair<int,shared_ptr<Token>>,shared_ptr<AExp>>(se,test);
-           return mp.parse(in);
+           auto mp = MapParser<pair<shared_ptr<AExp>,shared_ptr<Token>>,shared_ptr<AExp>>(se,test);
+           auto alt = AltParser<shared_ptr<AExp>>(mp,parse1);
+           return alt.parse(in);
            //auto se1 = SeqParser<pair<int,shared_ptr<Token>>,AExpParser>(se,parse3)
         }
 };

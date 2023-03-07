@@ -207,11 +207,11 @@ void printTokVector(vector<shared_ptr<Token>> vec){
 // }
 
 int main(){
-    shared_ptr<Token> token(new T_INT(1));
+    shared_ptr<Token> token(new T_INT(5));
     shared_ptr<Token> token2(new T_OP("+"));
     vector<shared_ptr<Token>> list;
     list.push_back(token);
-    list.push_back(token2);
+    //list.push_back(token2);
     AExpParser parser;
     auto output = parser.parse(list);
     auto it = output.begin();
