@@ -3,6 +3,7 @@
 #include <utility> 
 #include <memory>
 #include <functional>
+#include "syntaxTree.hpp"
 
 using std::set;
 using std::vector;
@@ -145,21 +146,29 @@ class TeParser : public Parser<int>{
         }
 };
 
-class AExpParser : public  SeqParser<int,shared_ptr<Token>>{
+shared_ptr<AExp> test(pair<int,shared_ptr<Token>> input){
+    shared_ptr<AExp> ret1(new Int(input.first));
+    shared_ptr<AExp> ret(new Aop("+",ret1,ret1));
+    return ret;
+}
+
+class AExpParser : public  MapParser<pair<int,shared_ptr<Token>>,shared_ptr<AExp>>{
     private:
         TeParser parse1;
         TokenParser parse2= TokenParser(shared_ptr<Token>(new T_OP("+"))); 
+        SeqParser<int,shared_ptr<Token>> se = SeqParser<int,shared_ptr<Token>>(parse1,parse2);
         // shared_ptr<AExpParser> parse3;
     public:
 
-        AExpParser(): SeqParser(parse1,parse2){
+        AExpParser(): MapParser(se,test){
         }
 
 
-        set<pair<pair<int,shared_ptr<Token>>,vector<shared_ptr<Token>>>> parse(vector<shared_ptr<Token>> in) override{
+        set<pair<shared_ptr<AExp>,vector<shared_ptr<Token>>>> parse(vector<shared_ptr<Token>> in) override{
            //AExpParser parse3;
-           auto se = SeqParser<int,shared_ptr<Token>>(parse1,parse2);
-           return se.parse(in);
+           
+           auto mp = MapParser<pair<int,shared_ptr<Token>>,shared_ptr<AExp>>(se,test);
+           return mp.parse(in);
            //auto se1 = SeqParser<pair<int,shared_ptr<Token>>,AExpParser>(se,parse3)
         }
 };

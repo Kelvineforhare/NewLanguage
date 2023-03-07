@@ -2,7 +2,6 @@
 #include "Include/value.hpp"
 #include "Include/token.hpp"
 #include "Include/parser.hpp"
-#include "Include/syntaxTree.hpp"
 #include "Exceptions/LexingError.cpp"
 #include <cstdlib>
 
@@ -57,6 +56,16 @@ std::ostream& operator<<(std::ostream& os,  std::pair<pair<int,shared_ptr<Token>
 std::ostream& operator<<(std::ostream& os,  std::pair<int,vector<shared_ptr<Token>>> const& p)
 {
     os << "(" << (p.first) << " : "  ;
+    for (int i = 0 ; i < p.second.size() ; i++ ){
+        cout << p.second[i]->toString() << ", ";
+    }
+    os << ")";
+    return os;
+}
+
+std::ostream& operator<<(std::ostream& os,  std::pair<shared_ptr<AExp>,vector<shared_ptr<Token>>> const& p)
+{
+    os << "(" << (p.first->getString()) << " : "  ;
     for (int i = 0 ; i < p.second.size() ; i++ ){
         cout << p.second[i]->toString() << ", ";
     }
@@ -174,9 +183,6 @@ void printTokVector(vector<shared_ptr<Token>> vec){
 // }
 
 
-int test(shared_ptr<Token> test){
-    return 10;
-}
 
 // int main(){
 //     shared_ptr<Token> token(new T_KWD("for"));

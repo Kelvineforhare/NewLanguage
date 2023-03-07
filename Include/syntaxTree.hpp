@@ -5,7 +5,8 @@ using std::string;
 using std::shared_ptr;
 
 class AExp{
-
+    public:
+        virtual string getString() = 0;
 };
 
 class Var : public AExp{
@@ -16,21 +17,25 @@ class Var : public AExp{
             s = sin;
         }
 
-        string getString(){
+        string getString() override{
             return s;
         }
 };
 
-class Num : public AExp{
+class Int : public AExp{
     private:
         int i;
     public:
-        Num(int x){
+        Int(int x){
             i = x;
         }
 
         int getInt(){
             return i;
+        }
+
+        string getString() override{
+            return std::to_string(i);
         }
 };
 
@@ -46,7 +51,7 @@ class Aop : public AExp{
             a2 = a2in;
         }
 
-        string getOp(){
+        string getOp() {
             return op;
         }
 
@@ -56,5 +61,9 @@ class Aop : public AExp{
 
         shared_ptr<AExp> getExp2(){
             return a2;
+        }
+
+        string getString() override{
+            return "Aop( " + op + " " + a1->getString() + " " + a2->getString() + " )";
         }
 };
