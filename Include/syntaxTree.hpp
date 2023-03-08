@@ -1,12 +1,17 @@
 #include <string>
 #include <memory>
+#include <map>
+#include "../Exceptions/RunTimeError.cpp"
 
 using std::string;
 using std::shared_ptr;
+using std::map;
 
 class AExp{
     public:
         virtual string getString() = 0;
+        virtual int eval_aexp(map<string,int> env) = 0;
+
 };
 
 class Var : public AExp{
@@ -19,6 +24,14 @@ class Var : public AExp{
 
         string getString() override{
             return s;
+        }
+
+        int eval_aexp(map<string,int> env){
+            auto it = env.find(s);
+            if(it == env.end()){
+                throw RunTimeError("Identifier" + s + "does is not defined");
+            }
+            return it->second;
         }
 };
 
@@ -36,6 +49,10 @@ class Int : public AExp{
 
         string getString() override{
             return std::to_string(i);
+        }
+
+        int eval_aexp(map<string,int> env){
+            return i;
         }
 };
 
@@ -65,5 +82,55 @@ class Aop : public AExp{
 
         string getString() override{
             return "Aop( " + op + " " + a1->getString() + " " + a2->getString() + " )";
+        }
+
+        int eval_aexp(map<string,int> env){
+            int num1 = a1->eval_aexp(env);
+            int num2 = a2->eval_aexp(env);
+
+            if(op == "+"){
+                return num1 + num2;
+            }
+            if(op == "-"){
+                return num1 - num2;
+            }
+            if(op == "*"){
+                return num1 * num2;
+            }
+            if(op == "/"){
+                return num1 / num2;
+            }
+            throw RunTimeError("operator: " + op + " does not exist");
+            return 0;
+        }
+};
+
+
+
+
+class Stmt{
+    public:
+        virtual string getString() = 0;
+        virtual map<string,int> eval_stmt(map<string,int>) = 0;
+};
+
+class Assign: public Stmt{
+    private:
+        string s;
+        shared_ptr<AExp> a;
+    public:
+        Assign(string sin, shared_ptr<AExp> ain){
+            s = sin;
+            a = ain;
+        }
+
+        map<string,int> eval_stmt(map<string,int> env){
+            env[s] = a->eval_aexp(env);
+            return env;
+        }
+
+        string getString(){
+            string ret = "Assign( " + s + " , " + a->getString() + " )";
+            return ret;
         }
 };

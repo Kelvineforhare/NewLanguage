@@ -10,10 +10,10 @@ std::ostream& operator<<(std::ostream& os,  std::pair<string,string> const& p)
     os << "(" << p.first << ","  ;
     for (int i = 0 ; i < p.second.length() ; i++ ){
         if(p.second[i] == '\n'){
-            cout<<"\\n";
+            os <<"\\n";
         }
         else{
-            cout << p.second[i];
+            os << p.second[i];
         }
     }
     os << ")";
@@ -24,7 +24,7 @@ std::ostream& operator<<(std::ostream& os,  std::pair<shared_ptr<Token>,vector<s
 {
     os << "(" << p.first->toString() << " : "  ;
     for (int i = 0 ; i < p.second.size() ; i++ ){
-        cout << p.second[i]->toString() << ", ";
+        os << p.second[i]->toString() << ", ";
     }
     os << ")";
     return os;
@@ -35,7 +35,7 @@ std::ostream& operator<<(std::ostream& os,  std::pair<pair<shared_ptr<Token>,sha
     os << "(" << p.first.first->toString() << " , "  ;
     os << p.first.second->toString() << " : "  ;
     for (int i = 0 ; i < p.second.size() ; i++ ){
-        cout << p.second[i]->toString() << ", ";
+        os << p.second[i]->toString() << ", ";
     }
     os << ")";
     return os;
@@ -46,7 +46,7 @@ std::ostream& operator<<(std::ostream& os,  std::pair<pair<int,shared_ptr<Token>
     os << "(" << p.first.first << " , "  ;
     os << p.first.second->toString() << " : "  ;
     for (int i = 0 ; i < p.second.size() ; i++ ){
-        cout << p.second[i]->toString() << ", ";
+        os << p.second[i]->toString() << ", ";
     }
     os << ")";
     return os;
@@ -57,7 +57,7 @@ std::ostream& operator<<(std::ostream& os,  std::pair<int,vector<shared_ptr<Toke
 {
     os << "(" << (p.first) << " : "  ;
     for (int i = 0 ; i < p.second.size() ; i++ ){
-        cout << p.second[i]->toString() << ", ";
+        os << p.second[i]->toString() << ", ";
     }
     os << ")";
     return os;
@@ -67,11 +67,22 @@ std::ostream& operator<<(std::ostream& os,  std::pair<shared_ptr<AExp>,vector<sh
 {
     os << "(" << (p.first->getString()) << " : "  ;
     for (int i = 0 ; i < p.second.size() ; i++ ){
-        cout << p.second[i]->toString() << ", ";
+        os << p.second[i]->toString() << ", ";
     }
     os << ")";
     return os;
 }
+
+std::ostream& operator<<(std::ostream& os, map<string,int> const& p)
+{
+    for(auto it = p.begin();
+        it != p.end(); ++it)
+    {
+        os << "Map(" << it->first << " -> " << std::to_string(it->second) << ")";
+    }
+    return os;
+}
+
 
 
 
@@ -207,18 +218,25 @@ void printTokVector(vector<shared_ptr<Token>> vec){
 // }
 
 int main(){
-    shared_ptr<Token> token(new T_INT(5));
-    shared_ptr<Token> token2(new T_OP("/"));
-    shared_ptr<Token> token3(new T_INT(7));
+    shared_ptr<Token> token(new T_ID("i"));
+    shared_ptr<Token> token2(new T_OP("="));
+    shared_ptr<Token> token3(new T_INT(5));
+    shared_ptr<Token> token4(new T_OP("+"));
+    shared_ptr<Token> token5(new T_INT(7));
+
+
     vector<shared_ptr<Token>> list;
     list.push_back(token);
     list.push_back(token2);
     list.push_back(token3);
-    AExpParser parser;
+    list.push_back(token4);
+    list.push_back(token5);
+    StmtParser parser;
     auto output = parser.parse_all(list);
     auto it = output.begin();
     if(it != output.end()){
-        cout << (*it)->getString() << "\n"; 
+        map<string,int> env;
+        cout << (*it)->eval_stmt(env) << "\n"; 
     }
 }
 
