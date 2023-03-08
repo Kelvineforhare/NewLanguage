@@ -26,7 +26,7 @@ class Var : public AExp{
             return s;
         }
 
-        int eval_aexp(map<string,int> env){
+        int eval_aexp(map<string,int> env) override{
             auto it = env.find(s);
             if(it == env.end()){
                 throw RunTimeError("Identifier" + s + "does is not defined");
@@ -51,7 +51,7 @@ class Int : public AExp{
             return std::to_string(i);
         }
 
-        int eval_aexp(map<string,int> env){
+        int eval_aexp(map<string,int> env)override{
             return i;
         }
 };
@@ -84,7 +84,7 @@ class Aop : public AExp{
             return "Aop( " + op + " " + a1->getString() + " " + a2->getString() + " )";
         }
 
-        int eval_aexp(map<string,int> env){
+        int eval_aexp(map<string,int> env)override{
             int num1 = a1->eval_aexp(env);
             int num2 = a2->eval_aexp(env);
 
@@ -124,13 +124,39 @@ class Assign: public Stmt{
             a = ain;
         }
 
-        map<string,int> eval_stmt(map<string,int> env){
+        map<string,int> eval_stmt(map<string,int> env)override{
             env[s] = a->eval_aexp(env);
             return env;
         }
 
-        string getString(){
+        string getString()override{
             string ret = "Assign( " + s + " , " + a->getString() + " )";
             return ret;
+        }
+};
+
+class WriteVar: public Stmt{
+    private:
+        string var;
+
+    public:
+        WriteVar(string str){
+            var = str;
+        }
+
+
+        map<string,int> eval_stmt(map<string,int> env)override{
+            auto it = env.find(var);
+            if(it == env.end()){
+                throw RunTimeError("Identifier" + var + "does is not defined");
+            }
+            cout << it->second;
+            return env;
+        }
+
+
+        string getString()override{
+                string ret = "WriteVar( " + var + " )";
+                return ret;
         }
 };
