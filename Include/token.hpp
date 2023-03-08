@@ -85,7 +85,7 @@ class T_INT :public Token{
             return i;
         }
         std::string toString()override{
-            return i + " ";
+            return std::to_string(i) + " ";
         }
 };
 

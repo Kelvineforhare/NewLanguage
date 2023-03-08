@@ -208,15 +208,17 @@ void printTokVector(vector<shared_ptr<Token>> vec){
 
 int main(){
     shared_ptr<Token> token(new T_INT(5));
-    shared_ptr<Token> token2(new T_OP("+"));
+    shared_ptr<Token> token2(new T_OP("/"));
+    shared_ptr<Token> token3(new T_INT(7));
     vector<shared_ptr<Token>> list;
     list.push_back(token);
-    //list.push_back(token2);
+    list.push_back(token2);
+    list.push_back(token3);
     AExpParser parser;
-    auto output = parser.parse(list);
+    auto output = parser.parse_all(list);
     auto it = output.begin();
     if(it != output.end()){
-        cout << *it << "\n"; 
+        cout << (*it)->getString() << "\n"; 
     }
 }
 
