@@ -7,7 +7,7 @@
 
 std::ostream& operator<<(std::ostream& os,  std::pair<string,string> const& p)
 {
-    os << "(" << p.first << ","  ;
+    os << "( " << p.first << ","  ;
     for (int i = 0 ; i < p.second.length() ; i++ ){
         if(p.second[i] == '\n'){
             os <<"\\n";
@@ -16,7 +16,7 @@ std::ostream& operator<<(std::ostream& os,  std::pair<string,string> const& p)
             os << p.second[i];
         }
     }
-    os << ")";
+    os << " )";
     return os;
 }
 
@@ -83,6 +83,17 @@ std::ostream& operator<<(std::ostream& os, map<string,int> const& p)
     return os;
 }
 
+std::ostream& operator<<(std::ostream& os, vector<shared_ptr<Stmt>> const& p)
+{
+    map<string,int> env;
+    for(int i = 0; i < p.size();++i){
+        cout << i << "\n";
+        env = p[i]->eval_stmt(env);
+        os << env;
+    }
+    return os;
+}
+
 
 
 
@@ -116,8 +127,8 @@ vector<pair<string,string>> lexing(std::shared_ptr<REGEX> r,string s){
 shared_ptr<Token> getTokFromStr(pair<string,string> s)
 {
     if (s.first == "semi") return shared_ptr<Token>(new T_SEMI());
-    if (s.first == "(") return shared_ptr<Token>(new T_LPAREN());   
-    if (s.first == ")") return shared_ptr<Token>(new T_RPAREN());   
+    if (s.first == "left bracket") return shared_ptr<Token>(new T_LPAREN());   
+    if (s.first == "right bracket") return shared_ptr<Token>(new T_RPAREN());   
     if (s.first == "{") return shared_ptr<Token>(new T_LBRACK());
     if (s.first == "}") return shared_ptr<Token>(new T_RBRACK());
     if (s.first == "id") return shared_ptr<Token>(new T_ID(s.second));
@@ -138,7 +149,7 @@ vector<shared_ptr<Token>> tokenise(vector<pair<string,string>> input)
 
 void printVector(vector<pair<string,string>> vec){
     for(int i =0; i < vec.size();++i){
-        cout << vec[i] << ",";
+        cout << vec[i] << " , ";
     }
     cout << "\n";
 }
@@ -164,34 +175,41 @@ void printTokVector(vector<shared_ptr<Token>> vec){
    
 // }
 
-// int main(){
-//     string digitstr = "0123456789";
-//     string digitstr1 = "123456789";
-//     string characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-//     string sym = "._><=;,\':";
-//     vector<string>{"while","if","then","else","do","for","to","true","false","read","write","skip"};
+vector<shared_ptr<Token>> getTokensFromLang(string input){
+    string digitstr = "0123456789";
+    string digitstr1 = "123456789";
+    string characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    string sym = "._><=;,\':";
+    vector<string> operators{"+","-","/","*","%","<",">","==","!=","<=",">=","=","&&","||"};
+    
 
-//     shared_ptr<RANGE> digit = range(set<char>(begin(digitstr), end(digitstr)));
-//     shared_ptr<RANGE> digit1 = range(set<char>(begin(digitstr1), end(digitstr1)));
-//     shared_ptr<ALT> num = alt(digit,seq(digit1,star(digit)));
+    shared_ptr<RANGE> digit = range(set<char>(begin(digitstr), end(digitstr)));
+    shared_ptr<RANGE> digit1 = range(set<char>(begin(digitstr1), end(digitstr1)));
+    shared_ptr<ALT> num = alt(digit,seq(digit1,star(digit)));
 
-//     shared_ptr<ALT> whitespaces = alt(alt(alt(cha('\n'),cha('\t')),cha('\r')),cha(' '));
-//     shared_ptr<ALT> spaces = alt(alt(cha('\n'),cha('\t')),cha('\r'));
+    shared_ptr<ALT> whitespaces = alt(alt(alt(cha('\n'),cha('\t')),cha('\r')),cha(' '));
+    shared_ptr<ALT> spaces = alt(alt(cha('\n'),cha('\t')),cha('\r'));
 
-//     shared_ptr<RANGE> letters = range(set<char> (begin(characters), end(characters)));
-//     shared_ptr<ALT> symbols =  alt(letters,range(set<char> (begin(sym), end(sym))));
+    shared_ptr<RANGE> letters = range(set<char> (begin(characters), end(characters)));
+    shared_ptr<ALT> symbols =  alt(letters,range(set<char> (begin(sym), end(sym))));
 
-//     shared_ptr<ID> keyword = id("key",stringList2rexp(vector<string>{"while","if","then","else","for","true","false","input","print"}));
-//     shared_ptr<ID> comment = id("com",seq(seq(seq(cha('/'),cha('/')),star(alt(alt(symbols,digit),cha(' ')))),spaces)); 
-//     shared_ptr<ID> string = id("str",seq(seq(cha('\"'),star(alt(alt(symbols,whitespaces),digit))),cha('\"')));
+    shared_ptr<ID> keyword = id("key",stringList2rexp(vector<string>{"while","if","then","else","for","true","false","input","print","print",}));
+    shared_ptr<ID> comment = id("com",seq(seq(seq(cha('/'),cha('/')),star(alt(alt(symbols,digit),cha(' ')))),spaces)); 
+    shared_ptr<ID> string = id("str",seq(seq(cha('\"'),star(alt(alt(symbols,whitespaces),digit))),cha('\"')));
+    shared_ptr<ID> ide = id("id",seq(letters,star(alt(letters,alt(digit,string2rexp("_"))))));
+    shared_ptr<ID> integer = id("int",alt(digit,seq(digit1,star(digit))));
+    shared_ptr<ID> op = id("op",stringList2rexp(operators));
+    shared_ptr<ID> semi = id("semi",string2rexp(";"));
+    shared_ptr<ID> left = id("left bracket",string2rexp("("));
+    shared_ptr<ID> right = id("right bracket",string2rexp(")"));
 
-//     shared_ptr<STAR> lang_regs = star(alt(alt(comment,keyword),string));
+    shared_ptr<STAR> lang_regs = star(alt(alt(comment,keyword),alt(ide,alt(op,alt(integer,alt(semi,alt(string,alt(alt(left,right),whitespaces))))))));
 
-//     auto ret = lexing(lang_regs,"\"kelvin\"");
-//     printVector(ret);
-//     printTokVector(tokenise(ret));
-//     return 0;
-// }
+    auto ret = lexing(lang_regs,input);
+    printVector(ret);
+    //printTokVector(tokenise(ret));
+    return tokenise(ret);
+}
 
 
 
@@ -218,25 +236,12 @@ void printTokVector(vector<shared_ptr<Token>> vec){
 // }
 
 int main(){
-    shared_ptr<Token> token(new T_ID("i"));
-    shared_ptr<Token> token2(new T_OP("="));
-    shared_ptr<Token> token3(new T_INT(5));
-    shared_ptr<Token> token4(new T_OP("+"));
-    shared_ptr<Token> token5(new T_INT(7));
-
-
-    vector<shared_ptr<Token>> list;
-    list.push_back(token);
-    list.push_back(token2);
-    list.push_back(token3);
-    list.push_back(token4);
-    list.push_back(token5);
-    StmtParser parser;
-    auto output = parser.parse_all(list);
+    auto input = getTokensFromLang("i=5+2;print(i)");
+    Stmts parser;
+    auto output = parser.parse_all(input);
     auto it = output.begin();
     if(it != output.end()){
-        map<string,int> env;
-        cout << (*it)->eval_stmt(env) << "\n"; 
+        cout << (*it) << "\n"; 
     }
 }
 

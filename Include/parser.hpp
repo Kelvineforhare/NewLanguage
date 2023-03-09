@@ -266,7 +266,7 @@ class StmtParser : public  Parser<shared_ptr<Stmt>>{
 
             
             TokenParser equalTok = TokenParser(shared_ptr<Token>(new T_OP("="))); 
-            TokenParser writeTok = TokenParser(shared_ptr<Token>(new T_KWD("write"))); 
+            TokenParser writeTok = TokenParser(shared_ptr<Token>(new T_KWD("print"))); 
             TokenParser leftParTok = TokenParser(shared_ptr<Token>(new T_LPAREN())); 
             TokenParser rightParTok = TokenParser(shared_ptr<Token>(new T_RPAREN())); 
             
@@ -284,8 +284,41 @@ class StmtParser : public  Parser<shared_ptr<Stmt>>{
             auto alt = AltParser<shared_ptr<Stmt>>(mpWrite,mpAssign);
 
             return alt.parse(in);
-           //auto se1 = SeqParser<pair<int,shared_ptr<Token>>,AExpParser>(se,parse3)
         }
+};
+
+vector<shared_ptr<Stmt>> makeToList(pair<pair<shared_ptr<Stmt>,shared_ptr<Token>>,vector<shared_ptr<Stmt>>> input){
+    vector<shared_ptr<Stmt>> ret(input.second);
+    ret.insert(ret.begin(),input.first.first);
+    return ret;
+}
+
+vector<shared_ptr<Stmt>> makeToSingleToList(shared_ptr<Stmt> input){
+    vector<shared_ptr<Stmt>> ret{input};
+    return ret;
+}
+
+
+
+
+
+class Stmts : public Parser<vector<shared_ptr<Stmt>>>{
+    set<pair<vector<shared_ptr<Stmt>>,vector<shared_ptr<Token>>>> parse(vector<shared_ptr<Token>> in)override{
+        StmtParser stmtParser;
+        TokenParser equalTok = TokenParser(shared_ptr<Token>(new T_SEMI())); 
+        Stmts stmts;
+
+        auto seq1 = SeqParser<shared_ptr<Stmt>,shared_ptr<Token>>(stmtParser,equalTok);
+        auto seq2 = SeqParser<pair<shared_ptr<Stmt>,shared_ptr<Token>>,vector<shared_ptr<Stmt>>>(seq1,stmts);
+
+        auto map = MapParser<pair<pair<shared_ptr<Stmt>,shared_ptr<Token>>,vector<shared_ptr<Stmt>>>,vector<shared_ptr<Stmt>>>(seq2,makeToList);
+        auto map2 = MapParser<shared_ptr<Stmt>,vector<shared_ptr<Stmt>>>(stmtParser,makeToSingleToList);
+
+        auto alt = AltParser<vector<shared_ptr<Stmt>>>(map,map2);
+
+
+        return alt.parse(in);
+    }
 };
 
 
