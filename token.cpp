@@ -75,9 +75,7 @@ std::ostream& operator<<(std::ostream& os,  std::pair<shared_ptr<AExp>,vector<sh
 
 std::ostream& operator<<(std::ostream& os, map<string,int> const& p)
 {
-    for(auto it = p.begin();
-        it != p.end(); ++it)
-    {
+    for(auto it = p.begin();it != p.end(); ++it){
         os << "Map(" << it->first << " -> " << std::to_string(it->second) << ")";
     }
     return os;
@@ -87,9 +85,8 @@ std::ostream& operator<<(std::ostream& os, vector<shared_ptr<Stmt>> const& p)
 {
     map<string,int> env;
     for(int i = 0; i < p.size();++i){
-        cout << i << "\n";
         env = p[i]->eval_stmt(env);
-        os << env;
+        os << env << "\n";
     }
     return os;
 }
@@ -236,13 +233,17 @@ vector<shared_ptr<Token>> getTokensFromLang(string input){
 // }
 
 int main(){
-    auto input = getTokensFromLang("i=5+2;print(i)");
+    auto input = getTokensFromLang("i=5+2; print(i) ; y = i + 5; print(y)");
     Stmts parser;
     auto output = parser.parse_all(input);
+   
     auto it = output.begin();
+
+
     if(it != output.end()){
         cout << (*it) << "\n"; 
     }
+    return 0;
 }
 
 

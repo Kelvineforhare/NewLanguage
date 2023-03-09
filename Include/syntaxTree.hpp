@@ -150,7 +150,7 @@ class WriteVar: public Stmt{
             if(it == env.end()){
                 throw RunTimeError("Identifier" + var + "does is not defined");
             }
-            cout << it->second;
+            cout << it->second << "\n";
             return env;
         }
 
@@ -158,5 +158,35 @@ class WriteVar: public Stmt{
         string getString()override{
                 string ret = "WriteVar( " + var + " )";
                 return ret;
+        }
+};
+
+
+
+class BExp{
+    public:
+        virtual string getString() = 0;
+};
+
+class True: public BExp{
+    public:
+        string getString(){
+            return "True";
+        }
+};
+
+class False: public BExp{
+    public:
+        string getString(){
+            return "False";
+        }
+};
+
+class Bop: public BExp{
+    private:
+        
+    public:
+        string getString(){
+            return "False";
         }
 };

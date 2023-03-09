@@ -305,10 +305,10 @@ vector<shared_ptr<Stmt>> makeToSingleToList(shared_ptr<Stmt> input){
 class Stmts : public Parser<vector<shared_ptr<Stmt>>>{
     set<pair<vector<shared_ptr<Stmt>>,vector<shared_ptr<Token>>>> parse(vector<shared_ptr<Token>> in)override{
         StmtParser stmtParser;
-        TokenParser equalTok = TokenParser(shared_ptr<Token>(new T_SEMI())); 
+        TokenParser semiTok = TokenParser(shared_ptr<Token>(new T_SEMI())); 
         Stmts stmts;
 
-        auto seq1 = SeqParser<shared_ptr<Stmt>,shared_ptr<Token>>(stmtParser,equalTok);
+        auto seq1 = SeqParser<shared_ptr<Stmt>,shared_ptr<Token>>(stmtParser,semiTok);
         auto seq2 = SeqParser<pair<shared_ptr<Stmt>,shared_ptr<Token>>,vector<shared_ptr<Stmt>>>(seq1,stmts);
 
         auto map = MapParser<pair<pair<shared_ptr<Stmt>,shared_ptr<Token>>,vector<shared_ptr<Stmt>>>,vector<shared_ptr<Stmt>>>(seq2,makeToList);
@@ -316,9 +316,56 @@ class Stmts : public Parser<vector<shared_ptr<Stmt>>>{
 
         auto alt = AltParser<vector<shared_ptr<Stmt>>>(map,map2);
 
-
+        
         return alt.parse(in);
     }
+};
+
+
+//Bexp
+
+shared_ptr<BExp> makeToBexp(pair<pair<shared_ptr<AExp>,shared_ptr<Token>>,shared_ptr<AExp>> input){
+    
+    return ret;
+}
+
+
+class Bl: public Parser<shared_ptr<BExp>>{
+    set<pair<shared_ptr<BExp>,vector<shared_ptr<Token>>>> parse(vector<shared_ptr<Token>> in)override{
+        AExpParser aExpParser;
+        vector<TokenParser> toks;
+        toks.push_back(TokenParser(shared_ptr<Token>(new T_OP("==")))); 
+        toks.push_back(TokenParser(shared_ptr<Token>(new T_OP("!=")))); 
+        toks.push_back(TokenParser(shared_ptr<Token>(new T_OP("<")))); 
+        toks.push_back(TokenParser(shared_ptr<Token>(new T_OP(">")))); 
+        toks.push_back(TokenParser(shared_ptr<Token>(new T_OP("==")))); 
+        toks.push_back(TokenParser(shared_ptr<Token>(new T_OP("<=")))); 
+        toks.push_back(TokenParser(shared_ptr<Token>(new T_OP(">=")))); 
+
+        vector<SeqParser<shared_ptr<AExp>,shared_ptr<Token>>> seqP;
+  
+        for(int i = 0; i < toks.size();++i){
+            seqP.push_back(SeqParser<shared_ptr<AExp>,shared_ptr<Token>>(aExpParser,toks[i]));
+        }
+
+
+        vector<SeqParser<pair<shared_ptr<AExp>,shared_ptr<Token>>,shared_ptr<AExp>>> fullSeq;
+        for(int i = 0; i < seqP.size();++i){
+            fullSeq.push_back(SeqParser<pair<shared_ptr<AExp>,shared_ptr<Token>>,shared_ptr<AExp>>(seqP[i],aExpParser));
+        }
+
+        vector<MapParser<pair<pair<shared_ptr<AExp>,shared_ptr<Token>>,shared_ptr<AExp>>,shared_ptr<BExp>>> seqMp;
+        for(int i = 0; i < fullSeq.size();++i){
+            seqMp.push_back(MapParser<pair<pair<shared_ptr<AExp>,shared_ptr<Token>>,shared_ptr<AExp>>,shared_ptr<BExp>>(fullSeq,))
+        }
+
+    }   
+};
+
+class BExpParser: public Parser<shared_ptr<BExp>>{
+    set<pair<shared_ptr<BExp>,vector<shared_ptr<Token>>>> parse(vector<shared_ptr<Token>> in)override{
+
+    }   
 };
 
 
