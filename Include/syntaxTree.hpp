@@ -184,8 +184,15 @@ class False: public BExp{
 
 class Bop: public BExp{
     private:
-        
+        string op;
+        shared_ptr<AExp> a1;
+        shared_ptr<AExp> a2;
     public:
+        Bop(string oper,shared_ptr<AExp> exp1,shared_ptr<AExp> exp2){
+            op = oper;
+            a1 = exp1;
+            a2 = exp2;
+        }
         string getString(){
             return "False";
         }

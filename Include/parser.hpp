@@ -325,15 +325,37 @@ class Stmts : public Parser<vector<shared_ptr<Stmt>>>{
 //Bexp
 
 shared_ptr<BExp> makeToBexp(pair<pair<shared_ptr<AExp>,shared_ptr<Token>>,shared_ptr<AExp>> input){
-    
+    shared_ptr<T_OP> op = dynamic_pointer_cast<T_OP>(input.first.second);
+    if(op == nullptr){
+        throw RunTimeError("Line 330 not an operator");
+    }
+    shared_ptr<BExp> ret(new Bop(op->getOP(),input.first.first,input.second));
     return ret;
 }
+
+shared_ptr<BExp> trueBexp(shared_ptr<Token>){
+    shared_ptr<BExp> ret(new True());
+    return ret;
+}
+
+shared_ptr<BExp> falseBexp(shared_ptr<Token>){
+    shared_ptr<BExp> ret(new False());
+    return ret;
+}
+
 
 
 class Bl: public Parser<shared_ptr<BExp>>{
     set<pair<shared_ptr<BExp>,vector<shared_ptr<Token>>>> parse(vector<shared_ptr<Token>> in)override{
         AExpParser aExpParser;
         vector<TokenParser> toks;
+
+        TokenParser trueTok =shared_ptr<Token>(new T_KWD("true"));
+        TokenParser falseTok = shared_ptr<Token>(new T_KWD("false"));
+
+        auto trueMp = MapParser<shared_ptr<Token>,shared_ptr<BExp>>(trueTok,trueBexp);
+        auto falseMp = MapParser<shared_ptr<Token>,shared_ptr<BExp>>(falseTok,falseBexp);
+
         toks.push_back(TokenParser(shared_ptr<Token>(new T_OP("==")))); 
         toks.push_back(TokenParser(shared_ptr<Token>(new T_OP("!=")))); 
         toks.push_back(TokenParser(shared_ptr<Token>(new T_OP("<")))); 
@@ -356,9 +378,18 @@ class Bl: public Parser<shared_ptr<BExp>>{
 
         vector<MapParser<pair<pair<shared_ptr<AExp>,shared_ptr<Token>>,shared_ptr<AExp>>,shared_ptr<BExp>>> seqMp;
         for(int i = 0; i < fullSeq.size();++i){
-            seqMp.push_back(MapParser<pair<pair<shared_ptr<AExp>,shared_ptr<Token>>,shared_ptr<AExp>>,shared_ptr<BExp>>(fullSeq,))
+            seqMp.push_back(MapParser<pair<pair<shared_ptr<AExp>,shared_ptr<Token>>,shared_ptr<AExp>>,shared_ptr<BExp>>(fullSeq[i],makeToBexp));
         }
+        vector<AltParser<shared_ptr<BExp>>> previousAlt;
+        previousAlt.push_back(AltParser<shared_ptr<BExp>>(seqMp[0],seqMp[1]));
+        for(int i = 2; i < seqMp.size();++i){
+            previousAlt.push_back(AltParser<shared_ptr<BExp>>(previousAlt[previousAlt.size()-1],seqMp[i]));
+        }
+        auto altOp = previousAlt[previousAlt.size()-1];
+        // auto altOpKwd = AltParser<shared_ptr<BExp>>(altOp,trueMp);
+        // auto alt = AltParser<shared_ptr<BExp>>(altOpKwd,falseMp);
 
+        return altOp.parse(in);
     }   
 };
 

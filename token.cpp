@@ -233,12 +233,10 @@ vector<shared_ptr<Token>> getTokensFromLang(string input){
 // }
 
 int main(){
-    auto input = getTokensFromLang("i=5+2; print(i) ; y = i + 5; print(y)");
-    Stmts parser;
+    auto input = getTokensFromLang("1 == 1");
+    Bl parser;
     auto output = parser.parse_all(input);
-   
     auto it = output.begin();
-
 
     if(it != output.end()){
         cout << (*it) << "\n"; 
