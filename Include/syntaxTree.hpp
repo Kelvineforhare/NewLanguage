@@ -166,19 +166,29 @@ class WriteVar: public Stmt{
 class BExp{
     public:
         virtual string getString() = 0;
+        virtual bool eval_bexp(map<string,int> env) = 0;
 };
 
 class True: public BExp{
     public:
-        string getString(){
+        string getString() override{
             return "True";
         }
+
+        bool eval_bexp(map<string,int> env)override{
+            return true;
+        }
+
 };
 
 class False: public BExp{
     public:
-        string getString(){
+        string getString()override{
             return "False";
+        }
+
+        bool eval_bexp(map<string,int> env)override{
+            return false;
         }
 };
 
@@ -193,7 +203,70 @@ class Bop: public BExp{
             a1 = exp1;
             a2 = exp2;
         }
-        string getString(){
-            return "False";
+        string getString()override{
+            return "Bop( " + op + " " + a1->getString() + " " + a2->getString() + ")";
+        }
+
+        bool eval_bexp(map<string,int> env)override{
+            int i = a1->eval_aexp(env);
+            int j = a2->eval_aexp(env);
+            if(op == "=="){
+                return i == j;
+            }
+            if(op == "!="){
+                return i != j;
+            }
+            if(op == "<"){
+                return i < j;
+            }
+            if(op == ">"){
+                return i > j;
+            }
+            if(op == "<="){
+                return i <= j;
+            }
+            if(op == ">="){
+                return i >= j;
+            }
+            throw RunTimeError("operator: " + op + " does not exist");
+            return false;
+        }
+};
+
+class And: public BExp{
+    private:
+        shared_ptr<BExp> a1;
+        shared_ptr<BExp> a2;
+    public:
+        And(shared_ptr<BExp> a,shared_ptr<BExp> b){
+            a1 = a;
+            a2 = b;
+        }
+
+        string getString()override{
+            return "And( " + a1->getString() + " " + a2->getString() + ")";
+        }
+
+        bool eval_bexp(map<string,int> env)override{
+            return a1->eval_bexp(env) && a2->eval_bexp(env);
+        }
+};
+
+class Or: public BExp{
+    private:
+        shared_ptr<BExp> a1;
+        shared_ptr<BExp> a2;
+    public:
+        Or(shared_ptr<BExp> a,shared_ptr<BExp> b){
+            a1 = a;
+            a2 = b;
+        }
+
+        string getString()override{
+            return "Or( " + a1->getString() + " " + a2->getString() + ")";
+        }
+
+        bool eval_bexp(map<string,int> env)override{
+            return a1->eval_bexp(env) || a2->eval_bexp(env);
         }
 };

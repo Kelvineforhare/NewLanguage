@@ -1,10 +1,10 @@
-all: lexerDebug lexer
+all: debug lang
 
-lexerDebug: regex.o value.o token.o
-	g++ -std=c++11 -g regex.o value.o token.o -o lexerDebug
+debug: regex.o value.o token.o
+	g++ -std=c++11 -g regex.o value.o token.o -o debug
 
-lexer: regex.o value.o token.o
-	g++ -std=c++11 regex.o value.o token.o -o lexer
+lang: regex.o value.o token.o
+	g++ -std=c++11 regex.o value.o token.o -o lang
 
 token.o: token.cpp
 	g++ -std=c++11 -g -c token.cpp 
@@ -16,4 +16,4 @@ regex.o: regex.cpp
 	g++ -std=c++11 -g -c regex.cpp
 
 clean:
-	rm *.o lexer lexerDebug
+	rm *.o debug lang
