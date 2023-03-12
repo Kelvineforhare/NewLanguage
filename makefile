@@ -1,19 +1,17 @@
-all: debug lang
+lang: regex.o value.o token.o main.o
+	g++ -std=c++11 regex.o value.o token.o main.o -o lang
 
-debug: regex.o value.o token.o
-	g++ -std=c++11 -g regex.o value.o token.o -o debug
-
-lang: regex.o value.o token.o
-	g++ -std=c++11 regex.o value.o token.o -o lang
+main.o: 
+	g++ -std=c++11 -c main.cpp
 
 token.o: token.cpp
-	g++ -std=c++11 -g -c token.cpp 
+	g++ -std=c++11 -c token.cpp 
 
 value.o: value.cpp
-	g++ -std=c++11 -g -c value.cpp 
+	g++ -std=c++11 -c value.cpp 
 
 regex.o: regex.cpp 
-	g++ -std=c++11 -g -c regex.cpp
+	g++ -std=c++11 -c regex.cpp
 
 clean:
-	rm *.o debug lang
+	rm *.o lang
