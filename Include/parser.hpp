@@ -288,7 +288,7 @@ public:
     }
 };
 
-// Stmt
+
 
 shared_ptr<Stmt> assign(pair<pair<string, shared_ptr<Token>>, shared_ptr<AExp>> input)
 {
@@ -331,40 +331,8 @@ public:
     }
 };
 
-vector<shared_ptr<Stmt>> makeToList(pair<pair<shared_ptr<Stmt>, shared_ptr<Token>>, vector<shared_ptr<Stmt>>> input)
-{
-    vector<shared_ptr<Stmt>> ret(input.second);
-    ret.insert(ret.begin(), input.first.first);
-    return ret;
-}
 
-vector<shared_ptr<Stmt>> makeToSingleToList(shared_ptr<Stmt> input)
-{
-    vector<shared_ptr<Stmt>> ret{input};
-    return ret;
-}
 
-class Stmts : public Parser<vector<shared_ptr<Stmt>>>
-{
-    set<pair<vector<shared_ptr<Stmt>>, vector<shared_ptr<Token>>>> parse(vector<shared_ptr<Token>> in) override
-    {
-        StmtParser stmtParser;
-        TokenParser semiTok = TokenParser(shared_ptr<Token>(new T_SEMI()));
-        Stmts stmts;
-
-        auto seq1 = SeqParser<shared_ptr<Stmt>, shared_ptr<Token>>(stmtParser, semiTok);
-        auto seq2 = SeqParser<pair<shared_ptr<Stmt>, shared_ptr<Token>>, vector<shared_ptr<Stmt>>>(seq1, stmts);
-
-        auto map = MapParser<pair<pair<shared_ptr<Stmt>, shared_ptr<Token>>, vector<shared_ptr<Stmt>>>, vector<shared_ptr<Stmt>>>(seq2, makeToList);
-        auto map2 = MapParser<shared_ptr<Stmt>, vector<shared_ptr<Stmt>>>(stmtParser, makeToSingleToList);
-
-        auto alt = AltParser<vector<shared_ptr<Stmt>>>(map, map2);
-
-        return alt.parse(in);
-    }
-};
-
-// Bexp
 
 shared_ptr<BExp> makeToBexp(pair<pair<shared_ptr<AExp>, shared_ptr<Token>>, shared_ptr<AExp>> input)
 {
@@ -544,6 +512,40 @@ class BExpParser : public Parser<shared_ptr<BExp>>
         auto map = MapParser<pair<shared_ptr<BExp>, shared_ptr<BExp>>, shared_ptr<BExp>>(seq, orToBexp);
 
         auto alt = AltParser<shared_ptr<BExp>>(map, term);
+
+        return alt.parse(in);
+    }
+};
+
+
+vector<shared_ptr<Stmt>> makeToList(pair<pair<shared_ptr<Stmt>, shared_ptr<Token>>, vector<shared_ptr<Stmt>>> input)
+{
+    vector<shared_ptr<Stmt>> ret(input.second);
+    ret.insert(ret.begin(), input.first.first);
+    return ret;
+}
+
+vector<shared_ptr<Stmt>> makeToSingleToList(shared_ptr<Stmt> input)
+{
+    vector<shared_ptr<Stmt>> ret{input};
+    return ret;
+}
+
+class Stmts : public Parser<vector<shared_ptr<Stmt>>>
+{
+    set<pair<vector<shared_ptr<Stmt>>, vector<shared_ptr<Token>>>> parse(vector<shared_ptr<Token>> in) override
+    {
+        StmtParser stmtParser;
+        TokenParser semiTok = TokenParser(shared_ptr<Token>(new T_SEMI()));
+        Stmts stmts;
+
+        auto seq1 = SeqParser<shared_ptr<Stmt>, shared_ptr<Token>>(stmtParser, semiTok);
+        auto seq2 = SeqParser<pair<shared_ptr<Stmt>, shared_ptr<Token>>, vector<shared_ptr<Stmt>>>(seq1, stmts);
+
+        auto map = MapParser<pair<pair<shared_ptr<Stmt>, shared_ptr<Token>>, vector<shared_ptr<Stmt>>>, vector<shared_ptr<Stmt>>>(seq2, makeToList);
+        auto map2 = MapParser<shared_ptr<Stmt>, vector<shared_ptr<Stmt>>>(stmtParser, makeToSingleToList);
+
+        auto alt = AltParser<vector<shared_ptr<Stmt>>>(map, map2);
 
         return alt.parse(in);
     }
