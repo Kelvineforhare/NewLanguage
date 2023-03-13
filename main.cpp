@@ -5,12 +5,12 @@
 
 int main()
 {
-    string str = "i = 0;" "\n"
-                 "if i > 5{" "\n"
-                 "i = i + 1;" "\n"
-                 "}" "\n"
-                 "else{"
-                 "i = i + 2;"  
+    string str = "n = 1;" "\n"
+                 "f = 1;" "\n"
+                 "while f + n < 10{" "\n"
+                 "f = f + n;"
+                 "print(f);"
+                 "print(n);"
                  "};" "\n";
     auto input = getTokensFromLang(str);
     Stmts parser;

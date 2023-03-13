@@ -351,13 +351,14 @@ class Bl : public Parser<shared_ptr<BExp>>
         }
 
         AltParser<shared_ptr<BExp>> alt = AltParser<shared_ptr<BExp>>(seqMp[0], seqMp[1]);
-        auto newAlt = AltParser<shared_ptr<BExp>>(alt, seqMp[3]);
-        auto newAlt2 = AltParser<shared_ptr<BExp>>(newAlt, seqMp[4]);
-        auto newAlt3 = AltParser<shared_ptr<BExp>>(newAlt2, seqMp[5]);
-        auto newAlt4 = AltParser<shared_ptr<BExp>>(newAlt3, trueMp);
-        auto newAlt5 = AltParser<shared_ptr<BExp>>(newAlt4, falseMp);
+        auto newAlt = AltParser<shared_ptr<BExp>>(alt, seqMp[2]);
+        auto newAlt2 = AltParser<shared_ptr<BExp>>(newAlt, seqMp[3]);
+        auto newAlt3 = AltParser<shared_ptr<BExp>>(newAlt2, seqMp[4]);
+        auto newAlt4 = AltParser<shared_ptr<BExp>>(newAlt3, seqMp[5]);
+        auto newAlt5 = AltParser<shared_ptr<BExp>>(newAlt4, trueMp);
+        auto newAlt6 = AltParser<shared_ptr<BExp>>(newAlt5, falseMp);
 
-        return newAlt5.parse(in);
+        return newAlt6.parse(in);
     }
 };
 

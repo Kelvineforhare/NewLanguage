@@ -94,7 +94,7 @@ std::ostream &operator<<(std::ostream &os, vector<shared_ptr<Stmt>> const &p)
     map<string, int> env;
     for (int i = 0; i < p.size(); ++i)
     {
-        //os << p[i]->getString() << "\n";
+        os << p[i]->getString() << "\n";
         env = p[i]->eval_stmt(env);
         os << env << "\n";
     }
