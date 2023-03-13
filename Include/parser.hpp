@@ -288,52 +288,6 @@ public:
     }
 };
 
-
-
-shared_ptr<Stmt> assign(pair<pair<string, shared_ptr<Token>>, shared_ptr<AExp>> input)
-{
-    shared_ptr<Stmt> ret(new Assign(input.first.first, input.second));
-    return ret;
-}
-
-shared_ptr<Stmt> writeVar(pair<pair<shared_ptr<Token>, shared_ptr<Token>>, pair<string, shared_ptr<Token>>> input)
-{
-    shared_ptr<Stmt> ret(new WriteVar(input.second.first));
-    return ret;
-}
-
-class StmtParser : public Parser<shared_ptr<Stmt>>
-{
-public:
-    set<pair<shared_ptr<Stmt>, vector<shared_ptr<Token>>>> parse(vector<shared_ptr<Token>> in) override
-    {
-        IdParser idParser;
-        AExpParser aExpParser;
-
-        TokenParser equalTok = TokenParser(shared_ptr<Token>(new T_OP("=")));
-        TokenParser writeTok = TokenParser(shared_ptr<Token>(new T_KWD("print")));
-        TokenParser leftParTok = TokenParser(shared_ptr<Token>(new T_LPAREN()));
-        TokenParser rightParTok = TokenParser(shared_ptr<Token>(new T_RPAREN()));
-
-        auto seq1 = SeqParser<string, shared_ptr<Token>>(idParser, equalTok);
-        auto seq2 = SeqParser<pair<string, shared_ptr<Token>>, shared_ptr<AExp>>(seq1, aExpParser);
-
-        auto writeSeq = SeqParser<shared_ptr<Token>, shared_ptr<Token>>(writeTok, leftParTok);
-        auto writeSeq2 = SeqParser<string, shared_ptr<Token>>(idParser, rightParTok);
-        auto fullwriteSeq = SeqParser<pair<shared_ptr<Token>, shared_ptr<Token>>, pair<string, shared_ptr<Token>>>(writeSeq, writeSeq2);
-
-        auto mpWrite = MapParser<pair<pair<shared_ptr<Token>, shared_ptr<Token>>, pair<string, shared_ptr<Token>>>, shared_ptr<Stmt>>(fullwriteSeq, writeVar);
-        auto mpAssign = MapParser<pair<pair<string, shared_ptr<Token>>, shared_ptr<AExp>>, shared_ptr<Stmt>>(seq2, assign);
-
-        auto alt = AltParser<shared_ptr<Stmt>>(mpWrite, mpAssign);
-
-        return alt.parse(in);
-    }
-};
-
-
-
-
 shared_ptr<BExp> makeToBexp(pair<pair<shared_ptr<AExp>, shared_ptr<Token>>, shared_ptr<AExp>> input)
 {
     shared_ptr<T_OP> op = dynamic_pointer_cast<T_OP>(input.first.second);
@@ -517,6 +471,80 @@ class BExpParser : public Parser<shared_ptr<BExp>>
     }
 };
 
+shared_ptr<Stmt> assign(pair<pair<string, shared_ptr<Token>>, shared_ptr<AExp>> input)
+{
+    shared_ptr<Stmt> ret(new Assign(input.first.first, input.second));
+    return ret;
+}
+
+shared_ptr<Stmt> writeVar(pair<pair<shared_ptr<Token>, shared_ptr<Token>>, pair<string, shared_ptr<Token>>> input)
+{
+    shared_ptr<Stmt> ret(new WriteVar(input.second.first));
+    return ret;
+}
+
+shared_ptr<Stmt> ifStmt(pair<pair<pair<pair<shared_ptr<Token>, shared_ptr<BExp>>, vector<shared_ptr<Stmt>>>, shared_ptr<Token>>, vector<shared_ptr<Stmt>>> input)
+{
+    shared_ptr<Stmt> ret(new If(input.first.first.first.second, input.first.first.second, input.second));
+    return ret;
+}
+
+shared_ptr<Stmt> whileStmt(pair<pair<shared_ptr<Token>, shared_ptr<BExp>>, vector<shared_ptr<Stmt>>> input)
+{
+    shared_ptr<Stmt> ret(new While(input.first.second, input.second));
+    return ret;
+}
+
+class BlockParser : public Parser<vector<shared_ptr<Stmt>>>
+{
+    set<pair<vector<shared_ptr<Stmt>>, vector<shared_ptr<Token>>>> parse(vector<shared_ptr<Token>> in) override;
+};
+
+class StmtParser : public Parser<shared_ptr<Stmt>>
+{
+public:
+    set<pair<shared_ptr<Stmt>, vector<shared_ptr<Token>>>> parse(vector<shared_ptr<Token>> in) override
+    {
+        IdParser idParser;
+        AExpParser aExpParser;
+        BExpParser bExpParser;
+        BlockParser blockParser;
+
+        TokenParser equalTok = TokenParser(shared_ptr<Token>(new T_OP("=")));
+        TokenParser writeTok = TokenParser(shared_ptr<Token>(new T_KWD("print")));
+        TokenParser ifTok = TokenParser(shared_ptr<Token>(new T_KWD("if")));
+        TokenParser elseTok = TokenParser(shared_ptr<Token>(new T_KWD("else")));
+        TokenParser whileTok = TokenParser(shared_ptr<Token>(new T_KWD("while")));
+        TokenParser leftParTok = TokenParser(shared_ptr<Token>(new T_LPAREN()));
+        TokenParser rightParTok = TokenParser(shared_ptr<Token>(new T_RPAREN()));
+
+        auto seq1 = SeqParser<string, shared_ptr<Token>>(idParser, equalTok);
+        auto seq2 = SeqParser<pair<string, shared_ptr<Token>>, shared_ptr<AExp>>(seq1, aExpParser);
+
+        auto writeSeq = SeqParser<shared_ptr<Token>, shared_ptr<Token>>(writeTok, leftParTok);
+        auto writeSeq2 = SeqParser<string, shared_ptr<Token>>(idParser, rightParTok);
+        auto fullwriteSeq = SeqParser<pair<shared_ptr<Token>, shared_ptr<Token>>, pair<string, shared_ptr<Token>>>(writeSeq, writeSeq2);
+
+        auto ifSeq = SeqParser<shared_ptr<Token>, shared_ptr<BExp>>(ifTok, bExpParser);
+        auto ifSeq3 = SeqParser<pair<shared_ptr<Token>, shared_ptr<BExp>>, vector<shared_ptr<Stmt>>>(ifSeq, blockParser);
+        auto ifSeq4 = SeqParser<pair<pair<shared_ptr<Token>, shared_ptr<BExp>>, vector<shared_ptr<Stmt>>>, shared_ptr<Token>>(ifSeq3, elseTok);
+        auto ifSeq5 = SeqParser<pair<pair<pair<shared_ptr<Token>, shared_ptr<BExp>>, vector<shared_ptr<Stmt>>>, shared_ptr<Token>>, vector<shared_ptr<Stmt>>>(ifSeq4, blockParser);
+
+        auto whileSeq = SeqParser<shared_ptr<Token>, shared_ptr<BExp>>(whileTok, bExpParser);
+        auto whileSeq2 = SeqParser<pair<shared_ptr<Token>, shared_ptr<BExp>>, vector<shared_ptr<Stmt>>>(whileSeq, blockParser);
+
+        auto mpWrite = MapParser<pair<pair<shared_ptr<Token>, shared_ptr<Token>>, pair<string, shared_ptr<Token>>>, shared_ptr<Stmt>>(fullwriteSeq, writeVar);
+        auto mpAssign = MapParser<pair<pair<string, shared_ptr<Token>>, shared_ptr<AExp>>, shared_ptr<Stmt>>(seq2, assign);
+        auto mpIf = MapParser<pair<pair<pair<pair<shared_ptr<Token>, shared_ptr<BExp>>, vector<shared_ptr<Stmt>>>, shared_ptr<Token>>, vector<shared_ptr<Stmt>>>, shared_ptr<Stmt>>(ifSeq5, ifStmt);
+        auto mpWhile = MapParser<pair<pair<shared_ptr<Token>, shared_ptr<BExp>>, vector<shared_ptr<Stmt>>>, shared_ptr<Stmt>>(whileSeq2, whileStmt);
+
+        auto alt = AltParser<shared_ptr<Stmt>>(mpWrite, mpAssign);
+        auto alt2 = AltParser<shared_ptr<Stmt>>(alt, mpIf);
+        auto alt3 = AltParser<shared_ptr<Stmt>>(alt2, mpWhile);
+
+        return alt3.parse(in);
+    }
+};
 
 vector<shared_ptr<Stmt>> makeToList(pair<pair<shared_ptr<Stmt>, shared_ptr<Token>>, vector<shared_ptr<Stmt>>> input)
 {
@@ -525,14 +553,15 @@ vector<shared_ptr<Stmt>> makeToList(pair<pair<shared_ptr<Stmt>, shared_ptr<Token
     return ret;
 }
 
-vector<shared_ptr<Stmt>> makeToSingleToList(shared_ptr<Stmt> input)
+vector<shared_ptr<Stmt>> makeToSingleToList(pair<shared_ptr<Stmt>, shared_ptr<Token>> input)
 {
-    vector<shared_ptr<Stmt>> ret{input};
+    vector<shared_ptr<Stmt>> ret{input.first};
     return ret;
 }
 
 class Stmts : public Parser<vector<shared_ptr<Stmt>>>
 {
+public:
     set<pair<vector<shared_ptr<Stmt>>, vector<shared_ptr<Token>>>> parse(vector<shared_ptr<Token>> in) override
     {
         StmtParser stmtParser;
@@ -543,13 +572,32 @@ class Stmts : public Parser<vector<shared_ptr<Stmt>>>
         auto seq2 = SeqParser<pair<shared_ptr<Stmt>, shared_ptr<Token>>, vector<shared_ptr<Stmt>>>(seq1, stmts);
 
         auto map = MapParser<pair<pair<shared_ptr<Stmt>, shared_ptr<Token>>, vector<shared_ptr<Stmt>>>, vector<shared_ptr<Stmt>>>(seq2, makeToList);
-        auto map2 = MapParser<shared_ptr<Stmt>, vector<shared_ptr<Stmt>>>(stmtParser, makeToSingleToList);
+        auto map2 = MapParser<pair<shared_ptr<Stmt>, shared_ptr<Token>>, vector<shared_ptr<Stmt>>>(seq1, makeToSingleToList);
 
         auto alt = AltParser<vector<shared_ptr<Stmt>>>(map, map2);
 
         return alt.parse(in);
     }
 };
+
+vector<shared_ptr<Stmt>> getStmts(pair<pair<shared_ptr<Token>, vector<shared_ptr<Stmt>>>, shared_ptr<Token>> input)
+{
+    return input.first.second;
+}
+
+set<pair<vector<shared_ptr<Stmt>>, vector<shared_ptr<Token>>>> BlockParser::parse(vector<shared_ptr<Token>> in)
+{
+    TokenParser leftBrTok = TokenParser(shared_ptr<Token>(new T_LBRACK()));
+    TokenParser rightBrTok = TokenParser(shared_ptr<Token>(new T_RBRACK()));
+    Stmts stmts;
+
+    auto seq = SeqParser<shared_ptr<Token>, vector<shared_ptr<Stmt>>>(leftBrTok, stmts);
+    auto seq2 = SeqParser<pair<shared_ptr<Token>, vector<shared_ptr<Stmt>>>, shared_ptr<Token>>(seq, rightBrTok);
+
+    auto map = MapParser<pair<pair<shared_ptr<Token>, vector<shared_ptr<Stmt>>>, shared_ptr<Token>>, vector<shared_ptr<Stmt>>>(seq2, getStmts);
+
+    return map.parse(in);
+}
 
 // class SimpleBExpParser: public Parser<shared_ptr<BExp>>{
 //     set<pair<shared_ptr<BExp>,vector<shared_ptr<Token>>>> parse(vector<shared_ptr<Token>> in)override{

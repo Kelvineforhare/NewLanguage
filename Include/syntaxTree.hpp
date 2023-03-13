@@ -16,6 +16,20 @@ public:
     virtual int eval_aexp(map<string, int> env) = 0;
 };
 
+class BExp
+{
+public:
+    virtual string getString() = 0;
+    virtual bool eval_bexp(map<string, int> env) = 0;
+};
+
+class Stmt
+{
+public:
+    virtual string getString() = 0;
+    virtual map<string, int> eval_stmt(map<string, int>) = 0;
+};
+
 class Var : public AExp
 {
 private:
@@ -37,7 +51,7 @@ public:
         auto it = env.find(s);
         if (it == env.end())
         {
-            throw RunTimeError("Identifier" + s + "does is not defined");
+            throw RunTimeError("Identifier " + s + " does is not defined");
         }
         return it->second;
     }
@@ -131,13 +145,6 @@ public:
     }
 };
 
-class Stmt
-{
-public:
-    virtual string getString() = 0;
-    virtual map<string, int> eval_stmt(map<string, int>) = 0;
-};
-
 class Assign : public Stmt
 {
 private:
@@ -180,7 +187,7 @@ public:
         auto it = env.find(var);
         if (it == env.end())
         {
-            throw RunTimeError("Identifier" + var + "does is not defined");
+            throw RunTimeError("Identifier " + var + " does is not defined");
         }
         cout << std::to_string(it->second) << "\n";
         return env;
@@ -193,11 +200,88 @@ public:
     }
 };
 
-class BExp
+class If : public Stmt
 {
+private:
+    shared_ptr<BExp> bexp;
+    vector<shared_ptr<Stmt>> ifBlock;
+    vector<shared_ptr<Stmt>> elseBlock;
+
 public:
-    virtual string getString() = 0;
-    virtual bool eval_bexp(map<string, int> env) = 0;
+    If(shared_ptr<BExp> boolean, vector<shared_ptr<Stmt>> b1, vector<shared_ptr<Stmt>> b2) : bexp(boolean), ifBlock(b1), elseBlock(b2) {}
+
+    string getString() override
+    {
+        string ret = "If( " + bexp->getString() + " | ";
+        for (int i = 0; i < ifBlock.size(); ++i)
+        {
+            ret += ifBlock[i]->getString() + " ";
+        }
+        ret += " | ";
+        for (int i = 0; i < elseBlock.size(); ++i)
+        {
+            ret += elseBlock[i]->getString() + " ";
+        }
+        ret += " )";
+        return ret;
+    }
+
+    map<string, int> eval_block(vector<shared_ptr<Stmt>> input, map<string, int> env)
+    {
+        for (int i = 0; i < input.size(); ++i)
+        {
+            env = input[i]->eval_stmt(env);
+        }
+        return env;
+    }
+
+    map<string, int> eval_stmt(map<string, int> env) override
+    {
+        if (bexp->eval_bexp(env))
+        {
+            return eval_block(ifBlock, env);
+        }
+        return eval_block(elseBlock, env);
+    }
+};
+
+class While : public Stmt
+{
+private:
+    shared_ptr<BExp> bexp;
+    vector<shared_ptr<Stmt>> block;
+
+public:
+    While(shared_ptr<BExp> b, vector<shared_ptr<Stmt>> stmt) : bexp(b), block(stmt) {}
+
+    string getString() override
+    {
+        string ret = "While( " + bexp->getString();
+        for (int i = 0; i < block.size(); ++i)
+        {
+            ret += block[i]->getString() + " ";
+        }
+        ret += " )";
+        return ret;
+    }
+
+    map<string, int> eval_block(vector<shared_ptr<Stmt>> input, map<string, int> env)
+    {
+        for (int i = 0; i < input.size(); ++i)
+        {
+            env = input[i]->eval_stmt(env);
+        }
+        return env;
+    }
+
+    map<string, int> eval_stmt(map<string, int> env) override
+    {
+        while (bexp->eval_bexp(env))
+        {
+            env = eval_block(block, env);
+        }
+        return env;
+    }
 };
 
 class True : public BExp

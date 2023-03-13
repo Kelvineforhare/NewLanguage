@@ -80,10 +80,12 @@ std::ostream &operator<<(std::ostream &os, std::pair<shared_ptr<AExp>, vector<sh
 
 std::ostream &operator<<(std::ostream &os, map<string, int> const &p)
 {
+    os << "Map(";
     for (auto it = p.begin(); it != p.end(); ++it)
     {
-        os << "Map(" << it->first << " -> " << std::to_string(it->second) << ")";
+        os << it->first << " -> " << std::to_string(it->second) << " | ";
     }
+    os << ")";
     return os;
 }
 
@@ -92,6 +94,7 @@ std::ostream &operator<<(std::ostream &os, vector<shared_ptr<Stmt>> const &p)
     map<string, int> env;
     for (int i = 0; i < p.size(); ++i)
     {
+        //os << p[i]->getString() << "\n";
         env = p[i]->eval_stmt(env);
         os << env << "\n";
     }
@@ -219,8 +222,10 @@ vector<shared_ptr<Token>> getTokensFromLang(string input)
     shared_ptr<ID> semi = id("semi", string2rexp(";"));
     shared_ptr<ID> left = id("left bracket", string2rexp("("));
     shared_ptr<ID> right = id("right bracket", string2rexp(")"));
+    shared_ptr<ID> leftCb = id("{", string2rexp("{"));
+    shared_ptr<ID> rightCb = id("}", string2rexp("}"));
 
-    shared_ptr<STAR> lang_regs = star(alt(alt(comment, keyword), alt(ide, alt(op, alt(integer, alt(semi, alt(string, alt(alt(left, right), whitespaces))))))));
+    shared_ptr<STAR> lang_regs = star(alt(alt(comment, keyword), alt(ide, alt(op, alt(integer, alt(semi, alt(string, alt(alt(left, right), alt(alt(leftCb,rightCb),whitespaces)))))))));
 
     auto ret = lexing(lang_regs, input);
     printVector(ret);

@@ -166,3 +166,5 @@ void printVector(vector<pair<string, string>> vec);
 void printTokVector(vector<shared_ptr<Token>> vec);
 vector<shared_ptr<Token>> getTokensFromLang(string input);
 
+std::ostream &operator<<(std::ostream &os, vector<shared_ptr<Stmt>> const &p);
+std::ostream &operator<<(std::ostream &os, map<string, int> const &p);
