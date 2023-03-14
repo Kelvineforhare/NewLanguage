@@ -5,14 +5,21 @@
 
 int main()
 {
-    string str = "n = 1;" "\n"
-                 "f = 1;" "\n"
-                 "while f + n < 10{" "\n"
-                 "f = f + n;"
-                 "print(f);"
-                 "print(n);"
-                 "};" "\n";
-    auto input = getTokensFromLang(str);
+    //if and else required
+    //semi colons after if else stantments and while statements
+    //semi colons after all stantment
+    //only int is the type
+    string fib = "n = 1;"
+                 "minus1 = 1;"
+                 "minus2 = 0;"
+                 "while (n > 0) {"
+                    "temp = minus2;"
+                    "minus2 = minus1 + minus2;"
+                    "minus1 = temp;"
+                    "n = n - 1;"
+                 "};"
+                 "print(minus2);";
+    auto input = getTokensFromLang(fib);
     Stmts parser;
     try
     {
