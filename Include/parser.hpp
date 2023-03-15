@@ -153,6 +153,49 @@ public:
     }
 };
 
+
+template <typename T, typename S>
+class ListParser : public Parser<vector<T>>
+{
+private:
+    Parser<T> &p;
+    Parser<S> &q;
+
+public:
+    ListParser(Parser<T> &pin, Parser<S> &qin) : p(pin), q(qin) {}
+
+
+    static vector<T> listParse(pair<pair<T,S>,vector<T>> input)
+    {
+        vector<T> vec;
+        vec.push_back(input.first.first);
+        vec.insert(vec.end(),input.second.begin(),input.second.end());
+        return vec;
+    }
+
+    static vector<T> singleParse(T input)
+    {
+        vector<T> vec;
+        vec.push_back(input);
+        return vec;
+    }
+
+    set<pair<vector<T>, vector<shared_ptr<Token>>>> parse(vector<shared_ptr<Token>> in) override
+    {
+        ListParser listParser = ListParser<T,S>(p,q);
+        auto seq = SeqParser<T,S>(p,q);
+        auto seq2 = SeqParser<pair<T,S>,vector<T>>(seq,listParser);
+
+        auto map = MapParser<pair<pair<T,S>,vector<T>>,vector<T>>(seq2,listParse);
+        auto map2 = MapParser<T,vector<T>>(p,singleParse);
+
+        auto alt = AltParser<vector<T>>(map,map2);
+
+        return alt.parse(in);
+    }
+};
+
+
 class IntParser : public Parser<int>
 {
 public:
@@ -632,7 +675,17 @@ set<pair<vector<shared_ptr<Stmt>>, vector<shared_ptr<Token>>>> BlockParser::pars
     return map.parse(in);
 }
 
+class Func : public Parser<vector<string>>{
+    public:
+        set<pair<vector<string>,vector<shared_ptr<Token>>>> parse(vector<shared_ptr<Token>> in) override
+        {
+            IdParser idParser;
+            TokenParser comTok = TokenParser(shared_ptr<Token>(new T_COMMA()));
 
+            auto list = ListParser<string,shared_ptr<Token>>(idParser,comTok);
+            return list.parse(in);
+        }
+};
 
 
 

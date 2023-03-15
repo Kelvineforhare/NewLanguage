@@ -153,6 +153,8 @@ shared_ptr<Token> getTokFromStr(pair<string, string> s)
         return shared_ptr<Token>(new T_KWD(s.second));
     if (s.first == "str")
         return shared_ptr<Token>(new T_STR(string(s.second.begin() + 1, s.second.end() - 1)));
+    if (s.first == ",")
+        return shared_ptr<Token>(new T_COMMA());
 }
 
 vector<shared_ptr<Token>> tokenise(vector<pair<string, string>> input)
@@ -196,7 +198,7 @@ vector<shared_ptr<Token>> getTokensFromLang(string input)
     shared_ptr<RANGE> digit1 = range(set<char>(begin(digitstr1), end(digitstr1)));
     shared_ptr<ALT> num = alt(digit, seq(digit1, star(digit)));
 
-    shared_ptr<ALT> whitespaces = alt(alt(alt(cha('\n'), cha('\t')), cha('\r')), cha(' '));
+    shared_ptr<ALT> whitespaces = alt(alt(alt(alt(alt(cha('\n'), cha('\t')), cha('\r')), cha(' ')),cha('\v')),cha('\f'));
     shared_ptr<ALT> spaces = alt(alt(cha('\n'), cha('\t')), cha('\r'));
 
     shared_ptr<RANGE> letters = range(set<char>(begin(characters), end(characters)));
@@ -224,9 +226,9 @@ vector<shared_ptr<Token>> getTokensFromLang(string input)
     shared_ptr<ID> right = id("right bracket", string2rexp(")"));
     shared_ptr<ID> leftCb = id("{", string2rexp("{"));
     shared_ptr<ID> rightCb = id("}", string2rexp("}"));
+    shared_ptr<ID> comma = id(",", string2rexp(","));
 
-    shared_ptr<STAR> lang_regs = star(alt(alt(comment, keyword), alt(ide, alt(op, alt(integer, alt(semi, alt(string, alt(alt(left, right), alt(alt(leftCb,rightCb),whitespaces)))))))));
-
+    shared_ptr<STAR> lang_regs = star(alt(alt(comment, keyword), alt(ide, alt(op, alt(integer, alt(semi, alt(string, alt(alt(left, right), alt(alt(leftCb,rightCb),alt(comma,whitespaces))))))))));
     auto ret = lexing(lang_regs, input);
     printVector(ret);
     return tokenise(ret);

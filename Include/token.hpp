@@ -57,6 +57,15 @@ class T_RBRACK : public Token
     }
 };
 
+class T_COMMA : public Token
+{
+    std::string toString() override
+    {
+        return ",";
+    }
+};
+
+
 class T_ID : public Token
 {
 private:

@@ -2,40 +2,37 @@
 #include "Include/value.hpp"
 #include "Include/token.hpp"
 #include "Include/parser.hpp"
-#include <sstream>
-//#include <string>
+#include <fstream>
 
-// string getString(string & str)
-// {
-//     std::ifstream ifs(str.c_str());
-//     std::ostringstream sstr;
-//     sstr << ifs.rdbuf();
-//     string line;
-//     return "test";
-// }
+using std::fstream;
+// if and else required
+// semi colons after if else stantments and while statements
+// semi colons after all stantment
+// only int is the type
+
+string getStringFromFile(string filename)
+{
+    string stringIn = "";
+    string str;
+    fstream file(filename);
+    while (getline(file, str))
+    {
+        stringIn += str;
+    }
+    return stringIn;
+}
 
 int main(int argc, char *argv[])
 {
-    if (argc > 1)
-    {
-
-        string t1;
-
-        string t2(argv[1]);
-
-        cout << "t1 :\n"
-             << t1 << std::endl;
-
-        cout << "t2 :\n"
-             << t2 << std::endl;
+    if(argc <= 1){
+        cout << "input file by adding using command: \"./lang filename.amn\"\n";
+        exit(0);
     }
-    // if and else required
-    // semi colons after if else stantments and while statements
-    // semi colons after all stantment
-    // only int is the type
-    string fib = "i = 0;"
-                 "print(i);";
-    auto input = getTokensFromLang(fib);
+    string filename(argv[1]);
+    string program = getStringFromFile(filename);
+    auto input = getTokensFromLang(program);
+
+
     Stmts parser;
     try
     {
