@@ -1,5 +1,5 @@
-lang: regex.o value.o token.o main.o
-	g++ -std=c++11 regex.o value.o token.o main.o -o lang
+armin: regex.o value.o token.o main.o
+	g++ -std=c++11 regex.o value.o token.o main.o -o armin
 
 main.o: main.cpp
 	g++ -std=c++11 -c main.cpp
@@ -14,4 +14,4 @@ regex.o: regex.cpp
 	g++ -std=c++11 -c regex.cpp
 
 clean:
-	rm *.o lang
+	rm *.o armin

@@ -6,10 +6,16 @@ class Token
 {
     friend bool operator==(shared_ptr<Token> a, shared_ptr<Token> b)
     {
-        if (typeid(*a) == typeid(*b) && a->toString() == b->toString())
+        if (a.get() && b.get())
         {
-            return true;
+            auto& tok1 = *a.get();
+            auto& tok2 = *b.get();
+            if (typeid(tok1) == typeid(tok2) && a->toString() == b->toString())
+            {
+                return true;
+            }
         }
+
         return false;
     }
 
@@ -64,7 +70,6 @@ class T_COMMA : public Token
         return " , ";
     }
 };
-
 
 class T_ID : public Token
 {

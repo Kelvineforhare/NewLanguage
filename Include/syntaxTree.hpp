@@ -519,4 +519,9 @@ public:
 
         return "Main()  { " + bodyPrint + "}";
     }
+
+    map<string, int> eval_dec(map<string, int> env) 
+    {
+        return env;
+    }
 };

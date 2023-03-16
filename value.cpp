@@ -86,7 +86,12 @@ shared_ptr<Val> Left::inject(shared_ptr<REGEX> r, char c) const
             return ret;
         }
     }
-    throw LexingError("Left Injection line 80 " + r->str() + " " + typeid(*r).name() + " " + this->str() + " " + c);
+    if (r.get())
+    {
+            auto& reg = *r.get();
+            throw LexingError("Left Injection line 80 " + reg.str() + " " + typeid(reg).name() + " " + this->str() + " " + c);
+    }
+     throw LexingError("Left Injection line 80 regex null"  + this->str() + " " + c);
     return nullptr;
 }
 
