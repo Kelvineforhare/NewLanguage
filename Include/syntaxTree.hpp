@@ -30,6 +30,13 @@ public:
     virtual map<string, int> eval_stmt(map<string, int>) = 0;
 };
 
+class Decl
+{
+public:
+    virtual string getString() = 0;
+    virtual map<string, int> eval_dec(map<string, int>) = 0;
+};
+
 class Var : public AExp
 {
 private:
@@ -195,7 +202,7 @@ public:
 
     string getString() override
     {
-        string ret = "WriteVar( " + var + " )";
+        string ret = "print( " + var + " )";
         return ret;
     }
 };
@@ -283,6 +290,32 @@ public:
         return env;
     }
 };
+
+class Call : public Stmt
+{
+private:
+    string name;
+    vector<string> args;
+public:
+    Call(string func,vector<string> inArgs):name(func),args(inArgs){}
+
+
+    string getString() override
+    {
+        string arg = "";
+        for(int i = 0; i < args.size();++i){
+            arg += args[i] + " , ";
+        }
+        return "Call: " + name + " ( " + arg + " ) ";
+    }
+
+    map<string, int> eval_stmt(map<string, int> env) override
+    {
+        return env;
+    }
+};
+
+
 
 class True : public BExp
 {
@@ -409,5 +442,81 @@ public:
     bool eval_bexp(map<string, int> env) override
     {
         return a1->eval_bexp(env) || a2->eval_bexp(env);
+    }
+};
+
+
+
+class Def : public Decl
+{
+private:
+    string name;
+    vector<string> args;
+    vector<shared_ptr<Stmt>> body;
+
+public:
+    Def(string funcName, vector<string> arguments, vector<shared_ptr<Stmt>> execute) : name(funcName), args(arguments), body(execute) {}
+
+    string getString()
+    {
+        string argPrint = "";
+        for (int i = 0; i < args.size(); ++i)
+        {
+            argPrint += args[i] + " , ";
+        }
+        string bodyPrint = "";
+        for (int i = 0; i < body.size(); ++i)
+        {
+            bodyPrint += body[i]->getString() + ";";
+        }
+
+        return "Def" + name + "() ( " + argPrint + " ) " + " { " + bodyPrint + "}";
+    }
+
+    // map<string,vector<shared_ptr<Stmt>>> getFunName()
+    // {
+    //     map<string,vector<shared_ptr<Stmt>>> ret;
+    //     ret.insert(name,body);
+    //     return name;
+    // }
+
+    map<string, int> eval_block(vector<shared_ptr<Stmt>> input, map<string, int> env)
+    {
+        for (int i = 0; i < input.size(); ++i)
+        {
+            env = input[i]->eval_stmt(env);
+        }
+        return env;
+    }
+    
+    map<string, int> runFunc(map<string, int> env)
+    {
+        return eval_block(body,env);
+    }
+
+    map<string, int> eval_dec(map<string, int> env) 
+    {
+        return env;
+    }
+};
+
+
+class Main : public Decl
+{
+private:
+    vector<shared_ptr<Stmt>> body;
+
+public:
+    Main(vector<shared_ptr<Stmt>> execute): body(execute) {}
+
+    string getString()
+    {
+        string bodyPrint = "";
+        for (int i = 0; i < body.size(); ++i)
+        {
+            bodyPrint += body[i]->getString() + ";";
+        }
+
+        return "Main()  { " + bodyPrint + "}";
     }
 };

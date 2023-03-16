@@ -33,17 +33,21 @@ int main(int argc, char *argv[])
     auto input = getTokensFromLang(program);
 
 
-    Stmts parser;
+    Program parser;
     try
     {
         auto output = parser.parse_all(input);
         auto it = output.begin();
-
+        
         if (it != output.end())
         {
             map<string, int> env;
             auto test = (*it);
-            cout << test << "\n";
+            for(int i = 0; i < test.size();++i)
+            {
+                cout << test[i]->getString() << "\n";
+            }
+           // cout << test->getString() << "\n";
         }
     }
     catch (RunTimeError &e)

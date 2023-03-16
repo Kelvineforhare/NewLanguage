@@ -61,7 +61,7 @@ class T_COMMA : public Token
 {
     std::string toString() override
     {
-        return ",";
+        return " , ";
     }
 };
 
