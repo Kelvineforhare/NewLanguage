@@ -92,10 +92,11 @@ std::ostream &operator<<(std::ostream &os, map<string, int> const &p)
 std::ostream &operator<<(std::ostream &os, vector<shared_ptr<Stmt>> const &p)
 {
     map<string, int> env;
+    map<string,Def> fun;
     for (int i = 0; i < p.size(); ++i)
     {
-        //os << p[i]->getString() << "\n";
-        env = p[i]->eval_stmt(env);
+        // os << p[i]->getString() << "\n";
+        env = p[i]->eval_stmt(env,fun);
         os << env << "\n";
     }
     return os;
@@ -198,7 +199,7 @@ vector<shared_ptr<Token>> getTokensFromLang(string input)
     shared_ptr<RANGE> digit1 = range(set<char>(begin(digitstr1), end(digitstr1)));
     shared_ptr<ALT> num = alt(digit, seq(digit1, star(digit)));
 
-    shared_ptr<ALT> whitespaces = alt(alt(alt(alt(alt(cha('\n'), cha('\t')), cha('\r')), cha(' ')),cha('\v')),cha('\f'));
+    shared_ptr<ALT> whitespaces = alt(alt(alt(alt(alt(cha('\n'), cha('\t')), cha('\r')), cha(' ')), cha('\v')), cha('\f'));
     shared_ptr<ALT> spaces = alt(alt(cha('\n'), cha('\t')), cha('\r'));
 
     shared_ptr<RANGE> letters = range(set<char>(begin(characters), end(characters)));
@@ -214,8 +215,7 @@ vector<shared_ptr<Token>> getTokensFromLang(string input)
                                            "false",
                                            "input",
                                            "print",
-                                           "def"
-                                       }));
+                                           "def"}));
     shared_ptr<ID> comment = id("com", seq(seq(seq(cha('/'), cha('/')), star(alt(alt(symbols, digit), cha(' ')))), spaces));
     shared_ptr<ID> string = id("str", seq(seq(cha('\"'), star(alt(alt(symbols, whitespaces), digit))), cha('\"')));
     shared_ptr<ID> ide = id("id", seq(letters, star(alt(letters, alt(digit, string2rexp("_"))))));
@@ -228,7 +228,18 @@ vector<shared_ptr<Token>> getTokensFromLang(string input)
     shared_ptr<ID> rightCb = id("}", string2rexp("}"));
     shared_ptr<ID> comma = id(",", string2rexp(","));
 
-    shared_ptr<STAR> lang_regs = star(alt(alt(comment, keyword), alt(ide, alt(op, alt(integer, alt(semi, alt(string, alt(alt(left, right), alt(alt(leftCb,rightCb),alt(comma,whitespaces))))))))));
+    shared_ptr<STAR> lang_regs = star(
+        alt(
+            alt(comment, keyword),
+            alt(ide,
+                alt(op,
+                    alt(integer,
+                        alt(semi,
+                            alt(string,
+                                alt(alt(left, right),
+                                    alt(alt(leftCb, rightCb),
+                                        alt(comma,
+                                            whitespaces))))))))));
     auto ret = lexing(lang_regs, input);
     printVector(ret);
     return tokenise(ret);

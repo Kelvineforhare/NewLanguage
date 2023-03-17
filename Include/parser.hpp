@@ -565,7 +565,7 @@ shared_ptr<Stmt> whileStmt(pair<pair<shared_ptr<Token>, shared_ptr<BExp>>, vecto
     return ret;
 }
 
-shared_ptr<Stmt> callStmt(pair<pair<pair<string,shared_ptr<Token>>,vector<string>>,shared_ptr<Token>> input)
+shared_ptr<Stmt> callStmt(pair<pair<pair<string,shared_ptr<Token>>,vector<shared_ptr<AExp>>>,shared_ptr<Token>> input)
 {
     shared_ptr<Stmt> ret(new Call(input.first.first.first,input.first.second));
     return ret;
@@ -611,16 +611,16 @@ public:
         auto whileSeq = SeqParser<shared_ptr<Token>, shared_ptr<BExp>>(whileTok, bExpParser);
         auto whileSeq2 = SeqParser<pair<shared_ptr<Token>, shared_ptr<BExp>>, vector<shared_ptr<Stmt>>>(whileSeq, blockParser);
 
-        auto list = ListParser<string, shared_ptr<Token>>(idParser, comTok);
+        auto list = ListParser<shared_ptr<AExp>, shared_ptr<Token>>(aExpParser, comTok);
         auto funcCallSeq = SeqParser<string,shared_ptr<Token>>(idParser,leftParTok);
-        auto funcCallSeq2 = SeqParser<pair<string,shared_ptr<Token>>,vector<string>>(funcCallSeq,list);
-        auto funcCallSeq3 = SeqParser<pair<pair<string,shared_ptr<Token>>,vector<string>>,shared_ptr<Token>>(funcCallSeq2,rightParTok);
+        auto funcCallSeq2 = SeqParser<pair<string,shared_ptr<Token>>,vector<shared_ptr<AExp>>>(funcCallSeq,list);
+        auto funcCallSeq3 = SeqParser<pair<pair<string,shared_ptr<Token>>,vector<shared_ptr<AExp>>>,shared_ptr<Token>>(funcCallSeq2,rightParTok);
 
         auto mpWrite = MapParser<pair<pair<shared_ptr<Token>, shared_ptr<Token>>, pair<string, shared_ptr<Token>>>, shared_ptr<Stmt>>(fullwriteSeq, writeVar);
         auto mpAssign = MapParser<pair<pair<string, shared_ptr<Token>>, shared_ptr<AExp>>, shared_ptr<Stmt>>(seq2, assign);
         auto mpIf = MapParser<pair<pair<pair<pair<shared_ptr<Token>, shared_ptr<BExp>>, vector<shared_ptr<Stmt>>>, shared_ptr<Token>>, vector<shared_ptr<Stmt>>>, shared_ptr<Stmt>>(ifSeq5, ifStmt);
         auto mpWhile = MapParser<pair<pair<shared_ptr<Token>, shared_ptr<BExp>>, vector<shared_ptr<Stmt>>>, shared_ptr<Stmt>>(whileSeq2, whileStmt);
-        auto mpCall = MapParser<pair<pair<pair<string,shared_ptr<Token>>,vector<string>>,shared_ptr<Token>>, shared_ptr<Stmt>>(funcCallSeq3,callStmt);
+        auto mpCall = MapParser<pair<pair<pair<string,shared_ptr<Token>>,vector<shared_ptr<AExp>>>,shared_ptr<Token>>, shared_ptr<Stmt>>(funcCallSeq3,callStmt);
 
         auto alt = AltParser<shared_ptr<Stmt>>(mpWrite, mpAssign);
         auto alt2 = AltParser<shared_ptr<Stmt>>(alt, mpIf);
@@ -730,6 +730,13 @@ vector<shared_ptr<Decl>> makeMain(vector<shared_ptr<Stmt>> input)
     return ret;
 }
 
+vector<shared_ptr<Decl>> singleDecl(shared_ptr<Decl> input)
+{
+    vector<shared_ptr<Decl>> ret;
+    ret.push_back(input);
+    return ret;
+}
+
 
 class Program : public Parser<vector<shared_ptr<Decl>>>
 {
@@ -744,10 +751,12 @@ public:
 
        auto map = MapParser<pair<shared_ptr<Decl>,vector<shared_ptr<Decl>>>,vector<shared_ptr<Decl>>>(seq,listDecl);
        auto map2 = MapParser<vector<shared_ptr<Stmt>>,vector<shared_ptr<Decl>>>(stmts,makeMain);
+       auto map3 = MapParser<shared_ptr<Decl>,vector<shared_ptr<Decl>>>(def,singleDecl);
 
        auto alt = AltParser<vector<shared_ptr<Decl>>>(map,map2);
+       auto alt2 = AltParser<vector<shared_ptr<Decl>>>(alt,map3);
     
-       return alt.parse(in);
+       return alt2.parse(in);
     }
 };
 
