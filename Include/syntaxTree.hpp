@@ -9,34 +9,34 @@ using std::map;
 using std::shared_ptr;
 using std::string;
 
+class Def;
+
 class AExp
 {
 public:
     virtual string getString() = 0;
-    virtual int eval_aexp(map<string, int> env) = 0;
+    virtual int eval_aexp(map<string, int> env, map<string, Def> fun) = 0;
 };
 
 class BExp
 {
 public:
     virtual string getString() = 0;
-    virtual bool eval_bexp(map<string, int> env) = 0;
+    virtual bool eval_bexp(map<string, int> env, map<string, Def> fun) = 0;
 };
-
-class Def;
 
 class Stmt
 {
 public:
     virtual string getString() = 0;
-    virtual map<string, int> eval_stmt(map<string, int> env, map<string,Def> fun) = 0;
+    virtual map<string, int> eval_stmt(map<string, int> env, map<string, Def> fun) = 0;
 };
 
 class Decl
 {
 public:
     virtual string getString() = 0;
-    virtual map<string, int> eval_dec(map<string, int> env, map<string,Def> fun) = 0;
+    virtual map<string, int> eval_dec(map<string, int> env, map<string, Def> fun) = 0;
 };
 
 class Def : public Decl
@@ -45,9 +45,10 @@ private:
     string name;
     vector<string> args;
     vector<shared_ptr<Stmt>> body;
+    shared_ptr<AExp> ret;
 
 public:
-    Def(string funcName, vector<string> arguments, vector<shared_ptr<Stmt>> execute) : name(funcName), args(arguments), body(execute) {}
+    Def(string funcName, vector<string> arguments, vector<shared_ptr<Stmt>> execute, shared_ptr<AExp> retIn) : name(funcName), args(arguments), body(execute), ret(retIn) {}
 
     string getString() override
     {
@@ -70,38 +71,66 @@ public:
         return name;
     }
 
-    map<string, int> eval_block(vector<shared_ptr<Stmt>> input, map<string, int> env, map<string,Def> fun)
+    int eval_block(vector<shared_ptr<Stmt>> input, map<string, int> env, map<string, Def> fun)
     {
         for (int i = 0; i < input.size(); ++i)
         {
-            env = input[i]->eval_stmt(env,fun);
+            env = input[i]->eval_stmt(env, fun);
         }
-        return env;
+        return ret->eval_aexp(env, fun);
     }
-    
-    map<string, int> runFunc(map<string, int> env,vector<shared_ptr<AExp>> input,map<string,Def> fun)
+
+    int runFunc(map<string, int> env, vector<shared_ptr<AExp>> input, map<string, Def> fun)
     {
-        map<string, int> functionEnv = env;
-        if(input.size() != args.size())
+        if (input.size() != args.size())
         {
             throw RunTimeError("Incorrect number of arguments");
         }
-        for(int i =0; i < args.size();++i)
+
+        map<string, int> functionEnv = env;
+
+        for (int i = 0; i < args.size(); ++i)
         {
-            functionEnv.insert({args[i],input[i]->eval_aexp(env)});
+            functionEnv[args[i]] = input[i]->eval_aexp(env, fun);
         }
-        return eval_block(body,functionEnv,fun);
+        return eval_block(body, functionEnv, fun);
     }
 
-    map<string, int> eval_dec(map<string, int> env, map<string,Def> fun) override
+    map<string, int> eval_dec(map<string, int> env, map<string, Def> fun) override
     {
         return env;
     }
 };
 
+class Call : public AExp
+{
+private:
+    string name;
+    vector<shared_ptr<AExp>> args;
 
+public:
+    Call(string func, vector<shared_ptr<AExp>> inArgs) : name(func), args(inArgs) {}
 
+    string getString() override
+    {
+        string arg = "";
+        for (int i = 0; i < args.size(); ++i)
+        {
+            arg += args[i]->getString() + " , ";
+        }
+        return "Call: " + name + " ( " + arg + " ) ";
+    }
 
+    int eval_aexp(map<string, int> env, map<string, Def> fun) override
+    {
+        auto it = fun.find(name);
+        if (it != fun.end())
+        {
+            return it->second.runFunc(env, args, fun);
+        }
+        throw RunTimeError("Function" + name + "Doesn't Exist");
+    }
+};
 
 class Var : public AExp
 {
@@ -119,7 +148,7 @@ public:
         return s;
     }
 
-    int eval_aexp(map<string, int> env) override
+    int eval_aexp(map<string, int> env, map<string, Def> fun) override
     {
         auto it = env.find(s);
         if (it == env.end())
@@ -151,7 +180,7 @@ public:
         return std::to_string(i);
     }
 
-    int eval_aexp(map<string, int> env) override
+    int eval_aexp(map<string, int> env, map<string, Def> fun) override
     {
         return i;
     }
@@ -192,10 +221,10 @@ public:
         return "Aop( " + op + " " + a1->getString() + " " + a2->getString() + " )";
     }
 
-    int eval_aexp(map<string, int> env) override
+    int eval_aexp(map<string, int> env, map<string, Def> fun) override
     {
-        int num1 = a1->eval_aexp(env);
-        int num2 = a2->eval_aexp(env);
+        int num1 = a1->eval_aexp(env, fun);
+        int num2 = a2->eval_aexp(env, fun);
 
         if (op == "+")
         {
@@ -231,9 +260,9 @@ public:
         a = ain;
     }
 
-    map<string, int> eval_stmt(map<string, int> env, map<string,Def> fun) override
+    map<string, int> eval_stmt(map<string, int> env, map<string, Def> fun) override
     {
-        env[s] = a->eval_aexp(env);
+        env[s] = a->eval_aexp(env, fun);
         return env;
     }
 
@@ -255,7 +284,7 @@ public:
         var = str;
     }
 
-    map<string, int> eval_stmt(map<string, int> env,map<string,Def> fun) override
+    map<string, int> eval_stmt(map<string, int> env, map<string, Def> fun) override
     {
         auto it = env.find(var);
         if (it == env.end())
@@ -299,22 +328,22 @@ public:
         return ret;
     }
 
-    map<string, int> eval_block(vector<shared_ptr<Stmt>> input, map<string, int> env,map<string,Def> fun)
+    map<string, int> eval_block(vector<shared_ptr<Stmt>> input, map<string, int> env, map<string, Def> fun)
     {
         for (int i = 0; i < input.size(); ++i)
         {
-            env = input[i]->eval_stmt(env,fun);
+            env = input[i]->eval_stmt(env, fun);
         }
         return env;
     }
 
-    map<string, int> eval_stmt(map<string, int> env ,map<string,Def> fun) override
+    map<string, int> eval_stmt(map<string, int> env, map<string, Def> fun) override
     {
-        if (bexp->eval_bexp(env))
+        if (bexp->eval_bexp(env, fun))
         {
-            return eval_block(ifBlock, env,fun);
+            return eval_block(ifBlock, env, fun);
         }
-        return eval_block(elseBlock, env,fun);
+        return eval_block(elseBlock, env, fun);
     }
 };
 
@@ -338,55 +367,39 @@ public:
         return ret;
     }
 
-    map<string, int> eval_block(vector<shared_ptr<Stmt>> input, map<string, int> env, map<string,Def> fun)
+    map<string, int> eval_block(vector<shared_ptr<Stmt>> input, map<string, int> env, map<string, Def> fun)
     {
         for (int i = 0; i < input.size(); ++i)
         {
-            env = input[i]->eval_stmt(env,fun);
+            env = input[i]->eval_stmt(env, fun);
         }
         return env;
     }
 
-    map<string, int> eval_stmt(map<string, int> env,map<string,Def> fun) override
+    map<string, int> eval_stmt(map<string, int> env, map<string, Def> fun) override
     {
-        while (bexp->eval_bexp(env))
+        while (bexp->eval_bexp(env, fun))
         {
-            env = eval_block(block, env,fun);
+            env = eval_block(block, env, fun);
         }
         return env;
     }
 };
 
-class Call : public Stmt
-{
-private:
-    string name;
-    vector<shared_ptr<AExp>> args;
-public:
-    Call(string func,vector<shared_ptr<AExp>> inArgs):name(func),args(inArgs){}
+class Pass : public Stmt{
+    public:
+        Pass(){}
 
-
-    string getString() override
-    {
-        string arg = "";
-        for(int i = 0; i < args.size();++i){
-            arg += args[i]->getString() + " , ";
-        }
-        return "Call: " + name + " ( " + arg + " ) ";
-    }
-
-    map<string, int> eval_stmt(map<string, int> env,map<string,Def> fun) override
-    {
-        auto it = fun.find(name);
-        if(it != fun.end())
+        string getString() override
         {
-            it->second.runFunc(env,args,fun);
+            return "pass";
         }
-        return env;
-    }
+
+        map<string, int> eval_stmt(map<string, int> env, map<string, Def> fun) override
+        {
+            return env;
+        }
 };
-
-
 
 class True : public BExp
 {
@@ -396,7 +409,7 @@ public:
         return "True";
     }
 
-    bool eval_bexp(map<string, int> env) override
+    bool eval_bexp(map<string, int> env, map<string, Def> fun) override
     {
         return true;
     }
@@ -410,7 +423,7 @@ public:
         return "False";
     }
 
-    bool eval_bexp(map<string, int> env) override
+    bool eval_bexp(map<string, int> env, map<string, Def> fun) override
     {
         return false;
     }
@@ -435,10 +448,10 @@ public:
         return "Bop( " + op + " " + a1->getString() + " " + a2->getString() + ")";
     }
 
-    bool eval_bexp(map<string, int> env) override
+    bool eval_bexp(map<string, int> env, map<string, Def> fun) override
     {
-        int i = a1->eval_aexp(env);
-        int j = a2->eval_aexp(env);
+        int i = a1->eval_aexp(env, fun);
+        int j = a2->eval_aexp(env, fun);
         if (op == "==")
         {
             return i == j;
@@ -486,9 +499,9 @@ public:
         return "And( " + a1->getString() + " " + a2->getString() + ")";
     }
 
-    bool eval_bexp(map<string, int> env) override
+    bool eval_bexp(map<string, int> env, map<string, Def> fun) override
     {
-        return a1->eval_bexp(env) && a2->eval_bexp(env);
+        return a1->eval_bexp(env, fun) && a2->eval_bexp(env, fun);
     }
 };
 
@@ -510,15 +523,11 @@ public:
         return "Or( " + a1->getString() + " " + a2->getString() + ")";
     }
 
-    bool eval_bexp(map<string, int> env) override
+    bool eval_bexp(map<string, int> env, map<string, Def> fun) override
     {
-        return a1->eval_bexp(env) || a2->eval_bexp(env);
+        return a1->eval_bexp(env, fun) || a2->eval_bexp(env, fun);
     }
 };
-
-
-
-
 
 class Main : public Decl
 {
@@ -526,13 +535,14 @@ private:
     vector<shared_ptr<Stmt>> body;
 
 public:
-    Main(vector<shared_ptr<Stmt>> execute){
-        body = execute; 
+    Main(vector<shared_ptr<Stmt>> execute)
+    {
+        body = execute;
     }
 
-    Main(){}
+    Main() {}
 
-    Main operator=(Main & m2)
+    Main operator=(Main &m2)
     {
         body = m2.body;
         return *this;
@@ -549,11 +559,11 @@ public:
         return "Main()  { " + bodyPrint + "}";
     }
 
-    map<string, int> eval_dec(map<string, int> env,map<string,Def> fun) override
+    map<string, int> eval_dec(map<string, int> env, map<string, Def> fun) override
     {
-        for(int i = 0; i < body.size();++i)
+        for (int i = 0; i < body.size(); ++i)
         {
-            env = body[i]->eval_stmt(env,fun);
+            env = body[i]->eval_stmt(env, fun);
         }
         return env;
     }

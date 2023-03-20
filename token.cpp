@@ -215,7 +215,10 @@ vector<shared_ptr<Token>> getTokensFromLang(string input)
                                            "false",
                                            "input",
                                            "print",
-                                           "def"}));
+                                           "def",
+                                           "return",
+                                           "pass"
+                                           }));
     shared_ptr<ID> comment = id("com", seq(seq(seq(cha('/'), cha('/')), star(alt(alt(symbols, digit), cha(' ')))), spaces));
     shared_ptr<ID> string = id("str", seq(seq(cha('\"'), star(alt(alt(symbols, whitespaces), digit))), cha('\"')));
     shared_ptr<ID> ide = id("id", seq(letters, star(alt(letters, alt(digit, string2rexp("_"))))));
