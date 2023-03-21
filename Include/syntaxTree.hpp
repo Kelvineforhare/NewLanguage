@@ -3,11 +3,13 @@
 #include <string>
 #include <memory>
 #include <map>
+#include <vector>
 #include "../Exceptions/RunTimeError.cpp"
 
 using std::map;
 using std::shared_ptr;
 using std::string;
+using std::vector;
 
 class Def;
 
@@ -30,6 +32,14 @@ class Stmt
 public:
     virtual string getString() = 0;
     virtual map<string, int> eval_stmt(map<string, int> env, map<string, Def> fun) = 0;
+    virtual bool hasReturn()
+    {
+        return false;
+    }
+    virtual shared_ptr<AExp> getReturn()
+    {
+        return nullptr;
+    }
 };
 
 class Decl
@@ -76,6 +86,10 @@ public:
         for (int i = 0; i < input.size(); ++i)
         {
             env = input[i]->eval_stmt(env, fun);
+            if (input[i]->hasReturn())
+            {
+                return input[i]->getReturn()->eval_aexp(env, fun);
+            }
         }
         return ret->eval_aexp(env, fun);
     }
@@ -242,6 +256,10 @@ public:
         {
             return num1 / num2;
         }
+        if (op == "%")
+        {
+            return num1 % num2;
+        }
         throw RunTimeError("operator: " + op + " does not exist");
         return 0;
     }
@@ -308,9 +326,12 @@ private:
     shared_ptr<BExp> bexp;
     vector<shared_ptr<Stmt>> ifBlock;
     vector<shared_ptr<Stmt>> elseBlock;
+    shared_ptr<AExp> ifRet;
+    bool hasIfReturn = false;
 
 public:
     If(shared_ptr<BExp> boolean, vector<shared_ptr<Stmt>> b1, vector<shared_ptr<Stmt>> b2) : bexp(boolean), ifBlock(b1), elseBlock(b2) {}
+    If(shared_ptr<BExp> boolean, vector<shared_ptr<Stmt>> b1, vector<shared_ptr<Stmt>> b2, shared_ptr<AExp> retIn) : bexp(boolean), ifBlock(b1), elseBlock(b2), ifRet(retIn) {}
 
     string getString() override
     {
@@ -328,6 +349,16 @@ public:
         return ret;
     }
 
+    bool hasReturn()
+    {
+        return hasIfReturn;
+    }
+
+    shared_ptr<AExp> getReturn()
+    {
+        return ifRet;
+    }
+
     map<string, int> eval_block(vector<shared_ptr<Stmt>> input, map<string, int> env, map<string, Def> fun)
     {
         for (int i = 0; i < input.size(); ++i)
@@ -341,6 +372,10 @@ public:
     {
         if (bexp->eval_bexp(env, fun))
         {
+            if (ifRet != nullptr)
+            {
+                hasIfReturn = true;
+            }
             return eval_block(ifBlock, env, fun);
         }
         return eval_block(elseBlock, env, fun);
@@ -386,19 +421,20 @@ public:
     }
 };
 
-class Pass : public Stmt{
-    public:
-        Pass(){}
+class Pass : public Stmt
+{
+public:
+    Pass() {}
 
-        string getString() override
-        {
-            return "pass";
-        }
+    string getString() override
+    {
+        return "pass";
+    }
 
-        map<string, int> eval_stmt(map<string, int> env, map<string, Def> fun) override
-        {
-            return env;
-        }
+    map<string, int> eval_stmt(map<string, int> env, map<string, Def> fun) override
+    {
+        return env;
+    }
 };
 
 class True : public BExp

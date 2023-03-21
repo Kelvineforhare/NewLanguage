@@ -1,6 +1,8 @@
 #pragma once
 #include <string>
 #include "syntaxTree.hpp"
+#include "regex.hpp"
+#include "value.hpp"
 
 class Token
 {

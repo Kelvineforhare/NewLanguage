@@ -326,20 +326,26 @@ public:
 
         TokenParser timesTok = TokenParser(shared_ptr<Token>(new T_OP("*")));
         TokenParser divTok = TokenParser(shared_ptr<Token>(new T_OP("/")));
+        TokenParser modTok = TokenParser(shared_ptr<Token>(new T_OP("%")));
 
         auto numTimes = SeqParser<shared_ptr<AExp>, shared_ptr<Token>>(faParser, timesTok);
         auto numDiv = SeqParser<shared_ptr<AExp>, shared_ptr<Token>>(faParser, divTok);
+        auto numMod = SeqParser<shared_ptr<AExp>, shared_ptr<Token>>(faParser, modTok);
 
         auto timesParse = SeqParser<pair<shared_ptr<AExp>, shared_ptr<Token>>, shared_ptr<AExp>>(numTimes, teParser);
         auto divParse = SeqParser<pair<shared_ptr<AExp>, shared_ptr<Token>>, shared_ptr<AExp>>(numDiv, teParser);
+        auto modParse = SeqParser<pair<shared_ptr<AExp>, shared_ptr<Token>>, shared_ptr<AExp>>(numMod, teParser);
 
         auto mpTimes = MapParser<pair<pair<shared_ptr<AExp>, shared_ptr<Token>>, shared_ptr<AExp>>, shared_ptr<AExp>>(timesParse, AopFun);
         auto mpDiv = MapParser<pair<pair<shared_ptr<AExp>, shared_ptr<Token>>, shared_ptr<AExp>>, shared_ptr<AExp>>(divParse, AopFun);
+        auto mpMod = MapParser<pair<pair<shared_ptr<AExp>, shared_ptr<Token>>, shared_ptr<AExp>>, shared_ptr<AExp>>(modParse, AopFun);
 
         auto alt1 = AltParser<shared_ptr<AExp>>(mpTimes, mpDiv);
-        auto alt2 = AltParser<shared_ptr<AExp>>(alt1, faParser);
+        auto alt2 = AltParser<shared_ptr<AExp>>(alt1, mpMod);
+        auto alt3 = AltParser<shared_ptr<AExp>>(alt2, faParser);
+        
 
-        return alt2.parse(in);
+        return alt3.parse(in);
     }
 };
 
@@ -364,7 +370,6 @@ set<pair<shared_ptr<AExp>, vector<shared_ptr<Token>>>> AExpParser::parse(vector<
     auto alt1 = AltParser<shared_ptr<AExp>>(mpPlus, mpSub);
     auto alt2 = AltParser<shared_ptr<AExp>>(alt1, teParser);
     return alt2.parse(in);
-    // auto se1 = SeqParser<pair<int,shared_ptr<Token>>,AExpParser>(se,parse3)
 }
 
 shared_ptr<BExp> makeToBexp(pair<pair<shared_ptr<AExp>, shared_ptr<Token>>, shared_ptr<AExp>> input)
@@ -588,9 +593,21 @@ shared_ptr<Stmt> passStmt(shared_ptr<Token> input)
 }
 
 
+shared_ptr<Stmt> ifRetStmt(pair<pair<pair<pair<shared_ptr<Token>,shared_ptr<BExp>>, pair<vector<shared_ptr<Stmt>>,shared_ptr<AExp>>>,shared_ptr<Token>>, vector<shared_ptr<Stmt>>> input)
+{
+    shared_ptr<Stmt> ret(new If(input.first.first.first.second, input.first.first.second.first, input.second, input.first.first.second.second));
+    return ret;
+}
+
 class BlockParser : public Parser<vector<shared_ptr<Stmt>>>
 {
     set<pair<vector<shared_ptr<Stmt>>, vector<shared_ptr<Token>>>> parse(vector<shared_ptr<Token>> in) override;
+};
+
+class BlockReturn : public Parser<pair<vector<shared_ptr<Stmt>>, shared_ptr<AExp>>>
+{
+public:
+    set<pair<pair<vector<shared_ptr<Stmt>>, shared_ptr<AExp>>, vector<shared_ptr<Token>>>> parse(vector<shared_ptr<Token>> in) override;
 };
 
 class StmtParser : public Parser<shared_ptr<Stmt>>
@@ -604,6 +621,7 @@ public:
 
         
         BlockParser blockParser;
+        BlockReturn blockReturn;
 
         TokenParser equalTok = TokenParser(shared_ptr<Token>(new T_OP("=")));
         TokenParser writeTok = TokenParser(shared_ptr<Token>(new T_KWD("print")));
@@ -626,6 +644,11 @@ public:
         auto ifSeq4 = SeqParser<pair<pair<shared_ptr<Token>, shared_ptr<BExp>>, vector<shared_ptr<Stmt>>>, shared_ptr<Token>>(ifSeq3, elseTok);
         auto ifSeq5 = SeqParser<pair<pair<pair<shared_ptr<Token>, shared_ptr<BExp>>, vector<shared_ptr<Stmt>>>, shared_ptr<Token>>, vector<shared_ptr<Stmt>>>(ifSeq4, blockParser);
 
+        auto ifRetSeq = SeqParser<shared_ptr<Token>, shared_ptr<BExp>>(ifTok, bExpParser);
+        auto ifRetSeq3 = SeqParser<pair<shared_ptr<Token>, shared_ptr<BExp>>, pair<vector<shared_ptr<Stmt>>, shared_ptr<AExp>>>(ifSeq, blockReturn);
+        auto ifRetSeq4 = SeqParser<pair<pair<shared_ptr<Token>, shared_ptr<BExp>>, pair<vector<shared_ptr<Stmt>>, shared_ptr<AExp>>>, shared_ptr<Token>>(ifRetSeq3, elseTok);
+        auto ifRetSeq5 = SeqParser<pair<pair<pair<shared_ptr<Token>, shared_ptr<BExp>>, pair<vector<shared_ptr<Stmt>>, shared_ptr<AExp>>>, shared_ptr<Token>>, vector<shared_ptr<Stmt>>>(ifRetSeq4, blockParser);
+
         auto whileSeq = SeqParser<shared_ptr<Token>, shared_ptr<BExp>>(whileTok, bExpParser);
         auto whileSeq2 = SeqParser<pair<shared_ptr<Token>, shared_ptr<BExp>>, vector<shared_ptr<Stmt>>>(whileSeq, blockParser);
 
@@ -633,14 +656,16 @@ public:
         auto mpAssign = MapParser<pair<pair<string, shared_ptr<Token>>, shared_ptr<AExp>>, shared_ptr<Stmt>>(seq2, assign);
         auto mpIf = MapParser<pair<pair<pair<pair<shared_ptr<Token>, shared_ptr<BExp>>, vector<shared_ptr<Stmt>>>, shared_ptr<Token>>, vector<shared_ptr<Stmt>>>, shared_ptr<Stmt>>(ifSeq5, ifStmt);
         auto mpWhile = MapParser<pair<pair<shared_ptr<Token>, shared_ptr<BExp>>, vector<shared_ptr<Stmt>>>, shared_ptr<Stmt>>(whileSeq2, whileStmt);
+        auto mpIfRet = MapParser<pair<pair<pair<pair<shared_ptr<Token>,shared_ptr<BExp>>, pair<vector<shared_ptr<Stmt>>,shared_ptr<AExp>>>,shared_ptr<Token>>, vector<shared_ptr<Stmt>>>, shared_ptr<Stmt>>(ifRetSeq5,ifRetStmt);
         auto mpPass = MapParser<shared_ptr<Token>,shared_ptr<Stmt>>(passTok,passStmt);
 
         auto alt = AltParser<shared_ptr<Stmt>>(mpWrite, mpAssign);
         auto alt2 = AltParser<shared_ptr<Stmt>>(alt, mpIf);
         auto alt3 = AltParser<shared_ptr<Stmt>>(alt2, mpWhile);
         auto alt4 = AltParser<shared_ptr<Stmt>>(alt3, mpPass);
+        auto alt5 = AltParser<shared_ptr<Stmt>>(alt4,mpIfRet);
 
-        return alt4.parse(in);
+        return alt5.parse(in);
     }
 };
 
@@ -710,35 +735,32 @@ pair<vector<shared_ptr<Stmt>>, shared_ptr<AExp>> getReturn(pair<pair<pair<shared
     return ret;
 }
 
-class BlockReturn : public Parser<pair<vector<shared_ptr<Stmt>>, shared_ptr<AExp>>>
+
+set<pair<pair<vector<shared_ptr<Stmt>>, shared_ptr<AExp>>, vector<shared_ptr<Token>>>> BlockReturn::parse(vector<shared_ptr<Token>> in)
 {
-public:
-    set<pair<pair<vector<shared_ptr<Stmt>>, shared_ptr<AExp>>, vector<shared_ptr<Token>>>> parse(vector<shared_ptr<Token>> in)
-    {
-        //custom if that has return here
-        TokenParser leftBrTok = TokenParser(shared_ptr<Token>(new T_LBRACK()));
-        TokenParser rightBrTok = TokenParser(shared_ptr<Token>(new T_RBRACK()));
-        TokenParser ret = TokenParser(shared_ptr<Token>(new T_KWD("return")));
-        Stmts stmts;
-        AExpParser aExpParser;
+    TokenParser leftBrTok = TokenParser(shared_ptr<Token>(new T_LBRACK()));
+    TokenParser rightBrTok = TokenParser(shared_ptr<Token>(new T_RBRACK()));
+    TokenParser ret = TokenParser(shared_ptr<Token>(new T_KWD("return")));
+    Stmts stmts;
+    AExpParser aExpParser;
 
-        auto seq = SeqParser<shared_ptr<Token>, vector<shared_ptr<Stmt>>>(leftBrTok, stmts);
-        auto seq2 = SeqParser<pair<shared_ptr<Token>, vector<shared_ptr<Stmt>>>, shared_ptr<Token>>(seq, ret);
-        auto seq3 = SeqParser<pair<pair<shared_ptr<Token>, vector<shared_ptr<Stmt>>>, shared_ptr<Token>>, shared_ptr<AExp>>(seq2, aExpParser);
-        auto seq4 = SeqParser<pair<pair<pair<shared_ptr<Token>, vector<shared_ptr<Stmt>>>, shared_ptr<Token>>, shared_ptr<AExp>>, shared_ptr<Token>>(seq3, rightBrTok);
+    auto seq = SeqParser<shared_ptr<Token>, vector<shared_ptr<Stmt>>>(leftBrTok, stmts);
+    auto seq2 = SeqParser<pair<shared_ptr<Token>, vector<shared_ptr<Stmt>>>, shared_ptr<Token>>(seq, ret);
+    auto seq3 = SeqParser<pair<pair<shared_ptr<Token>, vector<shared_ptr<Stmt>>>, shared_ptr<Token>>, shared_ptr<AExp>>(seq2, aExpParser);
+    auto seq4 = SeqParser<pair<pair<pair<shared_ptr<Token>, vector<shared_ptr<Stmt>>>, shared_ptr<Token>>, shared_ptr<AExp>>, shared_ptr<Token>>(seq3, rightBrTok);
 
-        auto justRet = SeqParser<shared_ptr<Token>, shared_ptr<Token> >(leftBrTok,ret);
-        auto justRet2 = SeqParser<pair<shared_ptr<Token>, shared_ptr<Token>>,shared_ptr<AExp>>(justRet,aExpParser);
-        auto justRet3 = SeqParser<pair<pair<shared_ptr<Token>, shared_ptr<Token>>,shared_ptr<AExp>>,shared_ptr<Token>>(justRet2,rightBrTok);
+    auto justRet = SeqParser<shared_ptr<Token>, shared_ptr<Token> >(leftBrTok,ret);
+    auto justRet2 = SeqParser<pair<shared_ptr<Token>, shared_ptr<Token>>,shared_ptr<AExp>>(justRet,aExpParser);
+    auto justRet3 = SeqParser<pair<pair<shared_ptr<Token>, shared_ptr<Token>>,shared_ptr<AExp>>,shared_ptr<Token>>(justRet2,rightBrTok);
 
-        auto map = MapParser<pair<pair<pair<pair<shared_ptr<Token>, vector<shared_ptr<Stmt>>>, shared_ptr<Token>>, shared_ptr<AExp>>, shared_ptr<Token>>, pair<vector<shared_ptr<Stmt>>, shared_ptr<AExp>>>(seq4, getStmtsAndReturn);
-        auto map2 = MapParser<pair<pair<pair<shared_ptr<Token>, shared_ptr<Token>>,shared_ptr<AExp>>,shared_ptr<Token>>,pair<vector<shared_ptr<Stmt>>, shared_ptr<AExp>>>(justRet3,getReturn);
+    auto map = MapParser<pair<pair<pair<pair<shared_ptr<Token>, vector<shared_ptr<Stmt>>>, shared_ptr<Token>>, shared_ptr<AExp>>, shared_ptr<Token>>, pair<vector<shared_ptr<Stmt>>, shared_ptr<AExp>>>(seq4, getStmtsAndReturn);
+    auto map2 = MapParser<pair<pair<pair<shared_ptr<Token>, shared_ptr<Token>>,shared_ptr<AExp>>,shared_ptr<Token>>,pair<vector<shared_ptr<Stmt>>, shared_ptr<AExp>>>(justRet3,getReturn);
 
-        auto alt = AltParser<pair<vector<shared_ptr<Stmt>>, shared_ptr<AExp>>>(map,map2);
+    auto alt = AltParser<pair<vector<shared_ptr<Stmt>>, shared_ptr<AExp>>>(map,map2);
 
-        return alt.parse(in);
-    }
-};
+    return alt.parse(in);
+}
+
 
 shared_ptr<Decl> createFunc(pair<pair<pair<pair<pair<shared_ptr<Token>, string>, shared_ptr<Token>>, vector<string>>, shared_ptr<Token>>, pair<vector<shared_ptr<Stmt>>, shared_ptr<AExp>>> input)
 {
