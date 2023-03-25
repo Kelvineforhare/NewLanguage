@@ -163,7 +163,10 @@ vector<shared_ptr<Token>> tokenise(vector<pair<string, string>> input)
     vector<shared_ptr<Token>> tokens;
     for (int i = 0; i < input.size(); ++i)
     {
-        tokens.push_back(getTokFromStr(input[i]));
+        if(input[i].first != "com"){
+            tokens.push_back(getTokFromStr(input[i]));
+        }
+        
     }
     return tokens;
 }

@@ -1,4 +1,9 @@
 #include <exception>
+#include <string>
+#include <iostream>
+
+using std::string;
+using std::cout;
 
 class LexingError : public std::exception
 {

@@ -17,7 +17,7 @@ string getStringFromFile(string filename)
     fstream file(filename);
     while (getline(file, str))
     {
-        stringIn += str;
+        stringIn += str + "\n";
     }
     return stringIn;
 }
@@ -53,6 +53,7 @@ void runProgram(string program)
     {
         auto output = parser.parse_all(input);
         auto it = output.begin();
+        
 
         if (it != output.end())
         {

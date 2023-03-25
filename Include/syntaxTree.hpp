@@ -54,11 +54,11 @@ class Def : public Decl
 private:
     string name;
     vector<string> args;
-    vector<shared_ptr<Stmt>> body;
+    vector<shared_ptr<Stmt> > body;
     shared_ptr<AExp> ret;
 
 public:
-    Def(string funcName, vector<string> arguments, vector<shared_ptr<Stmt>> execute, shared_ptr<AExp> retIn) : name(funcName), args(arguments), body(execute), ret(retIn) {}
+    Def(string funcName, vector<string> arguments, vector<shared_ptr<Stmt> > execute, shared_ptr<AExp> retIn) : name(funcName), args(arguments), body(execute), ret(retIn) {}
 
     string getString() override
     {
@@ -349,12 +349,12 @@ public:
         return ret;
     }
 
-    bool hasReturn()
+    bool hasReturn() override
     {
         return hasIfReturn;
     }
 
-    shared_ptr<AExp> getReturn()
+    shared_ptr<AExp> getReturn() override
     {
         return ifRet;
     }
@@ -600,6 +600,9 @@ public:
         for (int i = 0; i < body.size(); ++i)
         {
             env = body[i]->eval_stmt(env, fun);
+            if(body[i]->hasReturn()){
+                throw RunTimeError("Return present outside of a function");
+            }
         }
         return env;
     }

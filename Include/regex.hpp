@@ -16,7 +16,7 @@ using std::unique_ptr;
 using std::vector;
 
 class Val;
-class LexingError;
+
 
 typedef std::function<std::shared_ptr<Val>(std::shared_ptr<Val>)> Function;
 
@@ -32,7 +32,7 @@ class REGEX
     }
 
 public:
-    virtual ~REGEX() = default;
+    // virtual ~REGEX() = default;
     virtual bool nullable() const = 0;
     virtual std::shared_ptr<REGEX> der(char c) = 0;
     virtual std::string str() const = 0;
