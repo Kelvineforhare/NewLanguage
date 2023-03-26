@@ -387,6 +387,8 @@ class While : public Stmt
 private:
     shared_ptr<BExp> bexp;
     vector<shared_ptr<Stmt>> block;
+    bool hasRet = false;
+    shared_ptr<AExp> retVal;
 
 public:
     While(shared_ptr<BExp> b, vector<shared_ptr<Stmt>> stmt) : bexp(b), block(stmt) {}
@@ -402,18 +404,34 @@ public:
         return ret;
     }
 
+    bool hasReturn() override
+    {
+        return hasRet;
+    }
+
+    shared_ptr<AExp> getReturn() override
+    {
+        return retVal;
+    }
+
     map<string, int> eval_block(vector<shared_ptr<Stmt>> input, map<string, int> env, map<string, Def> fun)
     {
         for (int i = 0; i < input.size(); ++i)
         {
             env = input[i]->eval_stmt(env, fun);
+            if(input[i]->hasReturn())
+            {
+                hasRet = true;
+                retVal = input[i]->getReturn();
+                break;
+            }
         }
         return env;
     }
 
     map<string, int> eval_stmt(map<string, int> env, map<string, Def> fun) override
     {
-        while (bexp->eval_bexp(env, fun))
+        while (bexp->eval_bexp(env, fun) && !hasRet)
         {
             env = eval_block(block, env, fun);
         }

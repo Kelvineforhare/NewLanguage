@@ -658,7 +658,7 @@ public:
         auto alt4 = AltParser<shared_ptr<Stmt>>(alt3, mpPass);
         auto alt5 = AltParser<shared_ptr<Stmt>>(alt4, mpIfRet);
 
-        return alt4.parse(in);
+        return alt5.parse(in);
     }
 };
 
