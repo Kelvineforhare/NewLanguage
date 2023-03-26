@@ -327,11 +327,14 @@ private:
     vector<shared_ptr<Stmt>> ifBlock;
     vector<shared_ptr<Stmt>> elseBlock;
     shared_ptr<AExp> ifRet;
-    bool hasIfReturn = false;
+    shared_ptr<AExp> elseRet;
+    bool hasRet = false;
+    shared_ptr<AExp> returnExp;
+
 
 public:
-    If(shared_ptr<BExp> boolean, vector<shared_ptr<Stmt>> b1, vector<shared_ptr<Stmt>> b2) : bexp(boolean), ifBlock(b1), elseBlock(b2) {}
-    If(shared_ptr<BExp> boolean, vector<shared_ptr<Stmt>> b1, vector<shared_ptr<Stmt>> b2, shared_ptr<AExp> retIn) : bexp(boolean), ifBlock(b1), elseBlock(b2), ifRet(retIn) {}
+    If(shared_ptr<BExp> boolean, vector<shared_ptr<Stmt>> b1, vector<shared_ptr<Stmt>> b2, shared_ptr<AExp> retIn ,shared_ptr<AExp> elseRetIn) 
+    : bexp(boolean), ifBlock(b1), elseBlock(b2), ifRet(retIn),elseRet(elseRetIn) {}
 
     string getString() override
     {
@@ -351,12 +354,12 @@ public:
 
     bool hasReturn() override
     {
-        return hasIfReturn;
+        return hasRet;
     }
 
     shared_ptr<AExp> getReturn() override
     {
-        return ifRet;
+        return returnExp;
     }
 
     map<string, int> eval_block(vector<shared_ptr<Stmt>> input, map<string, int> env, map<string, Def> fun)
@@ -374,9 +377,15 @@ public:
         {
             if (ifRet != nullptr)
             {
-                hasIfReturn = true;
+                hasRet = true;
+                returnExp = ifRet;
             }
             return eval_block(ifBlock, env, fun);
+        }
+        if (elseRet != nullptr)
+        {
+            hasRet = true;
+            returnExp = elseRet;
         }
         return eval_block(elseBlock, env, fun);
     }

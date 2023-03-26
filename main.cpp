@@ -82,6 +82,11 @@ void runProgram(string program)
         cout << e.what() << "\n";
         exit(0);
     }
+    catch (ParsingError & e)
+    {
+        cout << e.what() << "\n";
+        exit(0);
+    }
 }
 
 int main(int argc, char *argv[])
