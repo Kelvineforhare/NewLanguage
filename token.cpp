@@ -247,6 +247,6 @@ vector<shared_ptr<Token>> getTokensFromLang(string input)
                                         alt(comma,
                                             whitespaces))))))))));
     auto ret = lexing(lang_regs, input);
-    printVector(ret);
+    //printVector(ret);
     return tokenise(ret);
 }

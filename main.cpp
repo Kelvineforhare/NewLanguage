@@ -3,8 +3,10 @@
 #include "Include/token.hpp"
 #include "Include/parser.hpp"
 #include <fstream>
+#include <chrono>
 
 using std::fstream;
+using namespace std::chrono;
 // if and else required
 // semi colons after if else stantments and while statements
 // semi colons after all stantment
@@ -46,18 +48,43 @@ void execute(set<vector<shared_ptr<Decl>>>::iterator it)
 
 void runProgram(string program)
 {
+    //auto start = high_resolution_clock::now();
     auto input = getTokensFromLang(program);
+    //auto stop = high_resolution_clock::now();
+
+    //auto duration = duration_cast<microseconds>(stop - start);
+
+    //auto sec = duration.count();
+
+    //cout << "Lexing program microseconds: " << sec  << std::endl;
 
     Program parser;
     try
     {
+        //auto start1 = high_resolution_clock::now();
+
         auto output = parser.parse_all(input);
+
+        //auto stop1 = high_resolution_clock::now();
+        //auto duration1 = duration_cast<microseconds>(stop1 - start1);
+
+        //auto sec1 = duration1.count();
+
+       // cout << "Parsing program microseconds: " << sec1  << std::endl;
+
         auto it = output.begin();
         
 
         if (it != output.end())
         {
+            auto start2 = high_resolution_clock::now();
             execute(it);
+            auto stop2 = high_resolution_clock::now();
+            auto duration2 = duration_cast<microseconds>(stop2 - start2);
+
+            auto sec2 = duration2.count();
+
+            cout << "Execution program microseconds: " << sec2  << std::endl;
         }
         else 
         {
@@ -94,8 +121,15 @@ int main(int argc, char *argv[])
     }
     string filename(argv[1]);
     string program = getStringFromFile(filename);
-
+    //auto start = high_resolution_clock::now();
     runProgram(program);
+    //auto stop = high_resolution_clock::now();
 
+    //auto duration = duration_cast<microseconds>(stop - start);
+ 
+    // To get the value of duration use the count()
+    // member function on the duration object
+    //auto sec = duration.count();
+    //cout << "Full program microseconds: " << sec  << std::endl;
     return 0;
 }

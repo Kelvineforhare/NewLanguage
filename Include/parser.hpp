@@ -310,7 +310,7 @@ public:
         auto alt3 = AltParser<shared_ptr<AExp>>(alt2, callMp);
         auto alt4 = AltParser<shared_ptr<AExp>>(alt3, retMp);
 
-        return alt4.parse(in);
+        return alt3.parse(in);
     }
 };
 
