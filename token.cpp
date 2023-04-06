@@ -6,7 +6,7 @@
 std::ostream &operator<<(std::ostream &os, std::pair<string, string> const &p)
 {
     os << "( " << p.first << ",";
-    for (int i = 0; i < p.second.length(); i++)
+    for (int i = 0; i < p.second.length(); ++i)
     {
         if (p.second[i] == '\n')
         {
@@ -24,7 +24,7 @@ std::ostream &operator<<(std::ostream &os, std::pair<string, string> const &p)
 std::ostream &operator<<(std::ostream &os, std::pair<shared_ptr<Token>, vector<shared_ptr<Token>>> const &p)
 {
     os << "(" << p.first->toString() << " : ";
-    for (int i = 0; i < p.second.size(); i++)
+    for (int i = 0; i < p.second.size(); ++i)
     {
         os << p.second[i]->toString() << ", ";
     }
@@ -36,7 +36,7 @@ std::ostream &operator<<(std::ostream &os, std::pair<pair<shared_ptr<Token>, sha
 {
     os << "(" << p.first.first->toString() << " , ";
     os << p.first.second->toString() << " : ";
-    for (int i = 0; i < p.second.size(); i++)
+    for (int i = 0; i < p.second.size(); ++i)
     {
         os << p.second[i]->toString() << ", ";
     }
@@ -48,7 +48,7 @@ std::ostream &operator<<(std::ostream &os, std::pair<pair<int, shared_ptr<Token>
 {
     os << "(" << p.first.first << " , ";
     os << p.first.second->toString() << " : ";
-    for (int i = 0; i < p.second.size(); i++)
+    for (int i = 0; i < p.second.size(); ++i)
     {
         os << p.second[i]->toString() << ", ";
     }
@@ -59,7 +59,7 @@ std::ostream &operator<<(std::ostream &os, std::pair<pair<int, shared_ptr<Token>
 std::ostream &operator<<(std::ostream &os, std::pair<int, vector<shared_ptr<Token>>> const &p)
 {
     os << "(" << (p.first) << " : ";
-    for (int i = 0; i < p.second.size(); i++)
+    for (int i = 0; i < p.second.size(); ++i)
     {
         os << p.second[i]->toString() << ", ";
     }
@@ -70,7 +70,7 @@ std::ostream &operator<<(std::ostream &os, std::pair<int, vector<shared_ptr<Toke
 std::ostream &operator<<(std::ostream &os, std::pair<shared_ptr<AExp>, vector<shared_ptr<Token>>> const &p)
 {
     os << "(" << (p.first->getString()) << " : ";
-    for (int i = 0; i < p.second.size(); i++)
+    for (int i = 0; i < p.second.size(); ++i)
     {
         os << p.second[i]->toString() << ", ";
     }
@@ -106,7 +106,7 @@ std::shared_ptr<Val> lex(std::shared_ptr<REGEX> r, string s, int i)
 {
     if (i >= s.size())
     {
-        (r->nullable()) ?: throw LexingError("Input doesnt match regular expression");
+        (r->nullable()) ?: throw LexingError("Input not recognised");
         std::shared_ptr<Val> ret = r->mkeps();
         return ret;
     }

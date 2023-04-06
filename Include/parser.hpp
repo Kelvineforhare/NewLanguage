@@ -654,9 +654,9 @@ public:
 
         auto alt = AltParser<shared_ptr<Stmt>>(mpWrite, mpAssign);
         auto alt2 = AltParser<shared_ptr<Stmt>>(alt, mpIf);
-        auto alt3 = AltParser<shared_ptr<Stmt>>(alt2, mpWhile);
+        auto alt3 = AltParser<shared_ptr<Stmt>>(alt2, mpIfRet);
         auto alt4 = AltParser<shared_ptr<Stmt>>(alt3, mpPass);
-        auto alt5 = AltParser<shared_ptr<Stmt>>(alt4, mpIfRet);
+        auto alt5 = AltParser<shared_ptr<Stmt>>(alt4, mpWhile);
 
         return alt5.parse(in);
     }

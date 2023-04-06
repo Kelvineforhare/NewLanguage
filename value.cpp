@@ -2,6 +2,8 @@
 #include "Include/value.hpp"
 #include "Exceptions/LexingError.cpp"
 
+//Throws in this file are for debugging
+
 // Val
 
 shared_ptr<Val> Val::inj(shared_ptr<REGEX> r, char c) const
