@@ -1,4 +1,4 @@
-# Armin Language
+# Armin
 
 **Armin** is a simple programming language implemented in C++. This project includes a parser and interpreter for the language.
 
